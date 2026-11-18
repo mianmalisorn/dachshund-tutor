@@ -1,0 +1,7 @@
+{% extends 'base.html' %}{% block title %}Личные напоминания{% endblock %}{% block content %}
+<h1>Личные напоминания</h1>
+<p>Отдельные договорённости. Эти сообщения не относятся к ученикам и занятиям.</p>
+<div class="form-actions"><a class="btn primary" href="/personal/new">Новое напоминание</a> <a href="/personal/connection">Подключение и согласие</a>{% if user.role=='admin' %} · <a href="/admin/personal-senders">Доступ отправителей</a>{% endif %}</div>
+{% for row in rows %}<article class="panel stack personal-panel"><h2><a href="/personal/{{ row.id }}">{{ names[row.sender_id] }} → {{ names[row.recipient_id] }}</a></h2><p class="personal-text">{{ row.body }}</p><p>{{ personal_time(row) }} · {{ labels.get(row.state,row.state) }}</p></article>{% else %}<p class="empty">Пока нет личных напоминаний.</p>{% endfor %}
+<nav aria-label="Страницы">{% if page>1 %}<a href="?page={{page-1}}">Назад</a>{% endif %} {% if has_next %}<a href="?page={{page+1}}">Далее</a>{% endif %}</nav>
+{% endblock %}

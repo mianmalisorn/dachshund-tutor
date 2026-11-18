@@ -1,0 +1,15 @@
+{% extends 'base.html' %}{% block title %}Подключение личных сообщений{% endblock %}{% block content %}
+<h1>Подключение и согласие</h1><p><a href="/personal">← Личные напоминания</a></p>
+{% if form_error %}<div role="alert" class="alert">{{form_error}}</div>{% endif %}
+<section class="panel stack personal-panel"><h2>1. Подтвердить Telegram</h2>
+<p>Откройте согласованного с владельцем Tutor бота в личном чате. Username не используется для доставки. Код действует 15 минут и только один раз; никому его не передавайте.</p>
+{% if configured %}<form method="post" action="/personal/connection/link"><input type="hidden" name="csrf" value="{{csrf}}"><button class="btn secondary">Получить код подключения</button></form>{% else %}<p>Бот пока не настроен. Реальных отправок нет.</p>{% endif %}
+{% if link_code %}<p>Отправьте боту:</p><pre class="personal-text">/start {{link_code}}</pre><p>После этого обновите страницу. Это ещё не разрешение отправки.</p>{% endif %}
+{% if connected %}<p>Личный аккаунт Telegram подтверждён. Проверено {{localtime(prefs.verified_at)}}.</p>{% endif %}</section>
+<section class="panel stack personal-panel"><h2>2. Разрешить личные напоминания</h2>
+<p>Уведомления об уроках настраиваются независимо. Отключение отменяет ожидающие личные сообщения; включение не возвращает их в очередь.</p>
+{% if connected %}<form method="post" action="/personal/connection/consent"><input type="hidden" name="csrf" value="{{csrf}}"><input type="hidden" name="version" value="{{prefs.version}}">
+<label class="check-tile"><input type="checkbox" name="enabled" value="yes" {% if prefs.enabled %}checked{% endif %}>Я разрешаю личные напоминания от выбранных отправителей</label>
+<fieldset><legend>Кому разрешить отправку</legend>{% for s in senders %}<label class="check-tile"><input type="checkbox" name="sender_ids" value="{{s.id}}" {% if s.id in grants %}checked{% endif %}>{{s.display_name}} ({{s.username}})</label>{% else %}<p>Других отправителей пока нет.</p>{% endfor %}</fieldset><button class="btn secondary">Сохранить согласие</button></form>{% else %}<p>Сначала выполните шаг 1.</p>{% endif %}
+<p>Полностью отключить категорию также можно сообщением <code>/stop_personal</code> этому боту. Команда применяется при следующем успешном опросе бота работающим обработчиком.</p>
+{% if not worker_enabled %}<p>Отправка выключена в конфигурации сервера.</p>{% endif %}</section>{% endblock %}

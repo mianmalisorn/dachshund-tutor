@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block title %}Результат занятия{% endblock %}
+{% block content %}<div class="student-memory attendance-page">
+<h1>Результат занятия</h1>
+<p class="memory-text">{{ lesson.student.display_name }} · {{ localtime(lesson.starts_at) }} · план {{ lesson.duration_minutes }} мин</p>
+<nav class="memory-actions"><a href="/admin/finance/lessons/{{ lesson.id }}">Расчёт занятия</a><a href="/admin/lessons?day={{ localtime(lesson.starts_at,'%Y-%m-%d') }}">К расписанию</a><a href="/admin/attendance">Посещаемость за период</a><a href="/admin/students/{{ lesson.student_id }}">Карточка ученика</a></nav>
+{% if form_error %}<p class="alert error" role="alert">{{ form_error }}</p>{% endif %}
+{% if current %}<p class="alert">Сохранено сейчас: {{ labels[current.outcome] }}{% if current.actual_minutes %}, {{ current.actual_minutes }} мин{% endif %}. Версия {{ current.version }}.<br><span class="memory-text">{{ current.comment }}</span></p>{% endif %}
+{% if not can_complete %}<p class="muted">Встреча ещё не завершилась по расписанию. Неявки отмечаются после планового окончания. {% if can_finish_early %}Уже начавшуюся встречу можно завершить досрочно с подтверждением ниже.{% else %}До начала встречи проведение недоступно.{% endif %}</p>{% endif %}
+<form class="panel stack" method="post" action="/admin/lessons/{{ lesson.id }}/attendance">
+<input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="creation_key" value="{{ values.creation_key }}"><input type="hidden" name="version" value="{{ values.version }}"><input type="hidden" name="lesson_version" value="{{ values.lesson_version }}">
+<label>Результат<select name="outcome" required>{% for key,label in labels.items() %}<option value="{{ key }}" {% if values.outcome==key %}selected{% endif %} {% if not can_complete and key not in ['unknown','cancelled_student','cancelled_teacher'] and not (key=='conducted' and can_finish_early) %}disabled{% endif %}>{{ label }}</option>{% endfor %}</select></label>
+{% if can_finish_early %}<label class="attendance-confirm"><input type="checkbox" name="confirm_early" value="yes" {% if values.get('confirm_early')=='yes' %}checked{% endif %}>Подтверждаю: занятие уже началось и фактически завершено досрочно. Плановое время и длительность остаются прежними.</label>{% endif %}
+<label>Фактическая длительность, минут · необязательно<input name="actual_minutes" type="number" min="1" max="1440" value="{{ values.actual_minutes }}" inputmode="numeric"><small>Только для проведённого занятия. Пустое поле означает, что длительность неизвестна.</small></label>
+<label>Приватный комментарий · необязательно<textarea name="comment" maxlength="2000" rows="3">{{ values.comment }}</textarea></label>
+<label>Причина исправления{% if not current %} · при первом сохранении необязательно{% endif %}<input name="reason" maxlength="500" value="{{ values.get('reason','') }}" {% if current %}required{% endif %}></label>
+{% if lesson.state=='cancelled' %}<label class="attendance-confirm"><input type="checkbox" name="restore_schedule" value="yes" {% if values.get('restore_schedule')=='yes' %}checked{% endif %}>Подтверждаю снятие отмены в расписании, если выбираю проведение, неявку или другую причину.</label>{% endif %}
+<p class="muted">Эта отметка не создаёт оплату и не заменяет педагогический итог. «Результат неизвестен» снимает ошибочную отметку, сохраняя историю; отменённую будущую встречу можно восстановить отдельно в расписании.</p>
+<div class="memory-actions"><button class="btn primary" type="submit">Сохранить результат</button><a href="/admin/lessons/{{ lesson.id }}/attendance" target="_blank" rel="noopener">Открыть актуальную форму</a></div>
+</form>
+<h2 class="top-gap">История исправлений</h2>
+{% for event in events %}<article class="panel top-gap"><p>{{ localtime(event.created_at) }} · версия {{ event.result_version }} · {{ actors.get(event.actor_id, 'Автор №' ~ event.actor_id) }}</p><p><strong>{{ labels[event.before_outcome] }} → {{ labels[event.after_outcome] }}</strong></p><p>Длительность: {{ event.before_minutes if event.before_minutes is not none else 'не указана' }} → {{ event.after_minutes if event.after_minutes is not none else 'не указана' }}</p>{% if event.before_comment %}<p class="memory-text">Было: {{ event.before_comment }}</p>{% endif %}{% if event.before_comment or event.after_comment %}<p class="memory-text">Стало: {{ event.after_comment or 'Комментарий удалён' }}</p>{% endif %}<p class="memory-text">{{ event.reason or 'Первичная отметка' }}</p></article>{% else %}<p class="empty">Результат пока не отмечен. Старые данные автоматически не заполняются.</p>{% endfor %}
+<nav class="memory-actions">{% if page>1 %}<a href="?page={{ page-1 }}">Более новые изменения</a>{% endif %}{% if has_more %}<a href="?page={{ page+1 }}">Более ранние изменения</a>{% endif %}</nav>
+</div>{% endblock %}

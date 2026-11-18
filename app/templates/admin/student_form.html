@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block title %}{{ 'Редактирование ученика' if student else 'Новый ученик' }}{% endblock %}
+{% block content %}
+<header class="page-head"><div><span class="eyebrow">УЧЕНИКИ</span><h1>{{ 'Редактировать ученика' if student else 'Новый ученик' }}</h1><p class="muted">Аккаунт создаёт только преподавательница.</p></div><a href="/admin/students" class="btn secondary">← К списку</a></header>
+{% if student %}<p><a class="text-link" href="/admin/students/{{ student.id }}">← К учебной карточке ученика</a></p>{% endif %}
+<section class="panel form-narrow">
+<form method="post" action="{{ '/admin/students/' ~ student.id ~ '/edit' if student else '/admin/students' }}" class="stack"><input type="hidden" name="csrf" value="{{ csrf }}">
+{% if student %}<input type="hidden" name="profile_version" value="{{ student.profile_version }}">{% endif %}
+<label>Отображаемое имя<input type="text" name="display_name" required maxlength="120" value="{{ student.display_name if student else '' }}" placeholder="Имя или подпись"></label>
+{% if student %}<label>Логин<input type="text" value="{{ student.username }}" disabled><small>Логин после создания не меняется.</small></label>
+{% else %}<label>Логин ученика<input type="text" name="username" required pattern="[A-Za-z0-9_.\-]{3,60}" maxlength="60" placeholder="anna_english"></label><label>Временный пароль<input type="password" name="password" required minlength="10" maxlength="256"><small>Ученик сменит его при первом входе. Передавайте безопасным способом.</small></label>{% endif %}
+<label>Папка<select name="folder_id"><option value="">Без папки</option>{% for folder in folders %}<option value="{{ folder.id }}" {% if student and student.folder_id == folder.id %}selected{% endif %}>{{ folder.name }}</option>{% endfor %}</select></label>
+{% if student %}<label>Личные заметки преподавательницы<textarea name="internal_notes" maxlength="4000" rows="4">{{ student.internal_notes }}</textarea><small>Ученику не видны.</small></label>{% endif %}
+<button class="btn primary" type="submit">{{ 'Сохранить изменения' if student else 'Создать аккаунт' }}</button></form>
+</section>
+{% if student %}
+<div class="two-columns top-gap"><section class="panel"><h2>Сбросить пароль</h2><p class="muted">Старый пароль перестанет работать, ученик выйдет из всех сеансов.</p><form class="stack" method="post" action="/admin/students/{{ student.id }}/reset-password"><input type="hidden" name="csrf" value="{{ csrf }}"><label>Новый временный пароль<input type="password" name="password" required minlength="10" maxlength="256"></label><button class="btn secondary" type="submit">Сбросить пароль</button></form></section>
+<section class="panel"><h2>Обучение и доступ</h2><p>{{ student_statuses[student.learning_status] }} · Вход {{ 'разрешён' if student.active else 'закрыт' }}</p><p class="muted">Пауза и архив сохраняют работы. Новые задания и занятия доступны только активным ученикам. Любое изменение завершает прежние сеансы.</p>
+<form class="stack" method="post" action="/admin/students/{{ student.id }}/status"><input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="version" value="{{ student.auth_version }}">
+<label>Статус обучения<select name="status">{% for key,label in student_statuses.items() %}<option value="{{ key }}" {% if key==student.learning_status %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
+<label><input type="checkbox" name="allow_access" value="yes"> Разрешить вход на паузе или в архиве</label><small>Без этой отметки вход будет закрыт. Для активного ученика вход разрешён.</small>
+<button class="btn secondary" type="submit" data-confirm="Изменить статус и доступ? Работы сохранятся, текущие сеансы завершатся.">Применить статус и доступ</button></form></section></div>
+<section class="panel top-gap"><h2>История обучения</h2><p class="muted">Последний успешный вход: {{ localtime(student.last_login_at) }}</p><ul>{% for event in events %}<li>{{ localtime(event.changed_at) }} — {{ student_statuses[event.status] }}, вход {{ 'разрешён' if event.access_enabled else 'закрыт' }}</li>{% else %}<li>Изменений пока нет.</li>{% endfor %}</ul></section>
+<section class="panel top-gap"><h2>Работы ученика</h2><p><a class="text-link" href="/admin/assignments?student={{ student.id }}">Найти задания и материалы ученика →</a></p>{% for target in targets %}<p><a href="/admin/assignments/{{ target.assignment_id }}">{{ target.assignment.title }}</a> · {{ status_labels[status_of(target)] }} · {{ target.submissions|length }} отправок</p>{% else %}<p class="empty">Заданий пока нет.</p>{% endfor %}</section>
+{% endif %}
+{% endblock %}

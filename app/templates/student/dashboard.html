@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block title %}Мои задания{% endblock %}
+{% block content %}
+<header class="page-head"><div><h1>Мои задания</h1></div><a href="/student/lessons" class="btn secondary">Мои занятия →</a></header>
+{% include 'student/_video_invite.html' %}
+{% if video_history %}<section class="panel video-history" aria-label="История видеозанятий"><h2>Прошедшие видеозанятия</h2><ul>{% for meeting in video_history %}<li><a href="/video/meetings/{{ meeting.id }}">Чат и материалы занятия от {{ localtime(meeting.ended_at) }}</a></li>{% endfor %}</ul><a href="/video/meetings/history">Все видеозанятия</a></section>{% endif %}
+<div class="filter-pills"><a class="filter-pill {% if not selected_status %}selected{% endif %}" href="/student">Все</a>{% for code, label in status_labels.items() %}<a class="filter-pill {% if selected_status==code %}selected{% endif %}" href="/student?status={{ code }}">{{ label }}</a>{% endfor %}</div>
+{% if targets %}<div class="student-assignment-grid">{% for t in targets %}<a href="/student/assignments/{{ t.assignment_id }}" class="panel task-card"><div class="task-card-top"><span class="eyebrow">{{ t.assignment.folder.name if t.assignment.folder else 'ДОМАШНЯЯ РАБОТА' }}</span><span class="chip {{ status_of(t) }}">{{ status_labels[status_of(t)] }}</span></div><h2>{{ t.assignment.title }}</h2><p class="muted clamp">{{ t.assignment.description or 'Описание внутри задания.' }}</p><div class="task-bottom"><span>◷ Сдать до {{ localtime(t.assignment.due_at) }}</span><strong>Открыть →</strong></div></a>{% endfor %}</div>
+{% else %}<section class="panel"><p class="empty">{% if selected_status %}Заданий по этому фильтру нет.{% else %}Пока свободно. Наслаждайся моментом.{% endif %}</p></section>{% endif %}
+{% endblock %}

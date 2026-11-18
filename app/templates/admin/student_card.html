@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+{% block title %}{{ student.display_name }} — карточка ученика{% endblock %}
+{% block page_assets %}<script defer src="/static/video-entry.js?v=stage10b4-20261116"></script>{% endblock %}
+{% block content %}
+<div class="student-memory student-hub" data-student-id="{{ student.id }}">
+  <header class="page-head student-hub-head">
+    <div class="student-card-heading"><img class="student-avatar" src="/static/student-avatar-default.png" alt="" width="56" height="56"><div><h1>{{ student.display_name }}</h1>
+      <div class="student-hub-meta"><span class="chip">{{ status_label }}</span><span class="muted">{{ 'Доступ открыт' if student.active else 'Доступ закрыт' }}</span></div>
+    </div></div><a class="btn secondary" href="/admin/students">← Ученики</a>
+  </header>
+
+  {% set can_video_call = student.active and student.learning_status=='active' %}
+  {% if can_video_call or current_video_meeting %}
+  <section class="panel student-video-entry" aria-labelledby="student-video-entry-title">
+    <h2 id="student-video-entry-title">{% if current_video_meeting and current_video_meeting.student_id==student.id %}Видеозвонок уже идёт{% elif current_video_meeting %}У вас уже идёт другой видеозвонок{% else %}Позвонить ученику сейчас{% endif %}</h2>
+    <div class="memory-actions">
+      {% if current_video_meeting %}<a class="btn primary" data-video-primary href="/video/meetings/{{ current_video_meeting.id }}">Вернуться к видеозвонку{% if current_video_meeting.student_id==student.id %} с {{ student.display_name }}{% endif %}</a>
+      {% elif can_video_call %}<form data-video-start="{{ student.id }}" class="video-start-form"><input type="hidden" name="csrf" value="{{ csrf }}"><button class="btn primary" data-video-primary type="submit">Начать видеозвонок сейчас</button><span role="status" data-video-start-status></span></form>{% endif %}
+      {% if can_video_call %}<a class="btn secondary" href="/admin/lessons/new?student_id={{ student.id }}">Создать занятие в расписании</a>{% endif %}
+    </div>
+  </section>
+  {% endif %}
+
+  <nav class="student-hub-tabs" aria-label="Разделы карточки ученика">
+    {% for key,label in [('overview','Обзор'),('schedule','Расписание'),('attendance','Посещаемость'),('homework','Домашние задания'),('tests','Тесты'),('progress','Прогресс и темы'),('finance','Финансы'),('history','Заметки и история')] %}
+      <a href="/admin/students/{{ student.id }}?section={{ key }}"{% if section==key %} aria-current="page"{% endif %}>{{ label }}</a>
+    {% endfor %}
+  </nav>
+
+  {% if section=='overview' %}
+  <section class="hub-overview-grid" aria-label="Обзор ученика">
+    <article class="panel hub-feature">
+      <span class="eyebrow">РАСПИСАНИЕ</span>
+      {% if next_lesson %}
+        <h2>{{ localtime(next_lesson.starts_at) }}</h2><p>{{ next_lesson.duration_minutes }} минут · {{ {'scheduled':'Запланировано','cancelled':'Отменено','suppressed':'Приостановлено'}.get(next_lesson.state,next_lesson.state) }}</p>
+        <div class="memory-actions"><a class="btn primary" href="/admin/lessons/{{ next_lesson.id }}/edit">Открыть занятие</a><a href="/admin/lessons">Календарь</a></div>
+      {% else %}<h2>Встреча не запланирована</h2>{% if student.active and student.learning_status=='active' %}<a class="btn primary" href="/admin/lessons/new?student_id={{ student.id }}">Создать занятие</a>{% else %}<p class="muted">Для нового занятия сначала восстановите доступ.</p>{% endif %}{% endif %}
+      {% for rule in student_series %}<p class="muted">Повтор: {% for weekday in rule.weekdays.split(',') %}{{ ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'][weekday|int] }}{% if not loop.last %}, {% endif %}{% endfor %} · {{ rule.local_time.strftime('%H:%M') }} · {{ {'active':'действует','paused':'пауза'}.get(rule.state,rule.state) }}</p>{% endfor %}
+    </article>
+
+    <article class="panel hub-attention">
+      <h2>Требует внимания</h2>
+      <ul class="hub-counts">
+        <li><span>Работы на проверку</span><strong>{{ pending_homework_count }}</strong></li>
+        <li><span>Тесты с ответами</span><strong>{{ pending_quiz_count }}</strong></li>
+        <li><span>Прошедшие занятия без результата</span><strong>{{ lesson_needing_attendance_count }}</strong></li>
+      </ul>
+      {% if pending_homework_count or pending_quiz_count %}<div class="memory-actions">
+        {% if pending_homework_count %}<a class="btn secondary" href="/admin/students/{{ student.id }}?section=homework">Открыть проверку работ</a>{% endif %}
+        {% if pending_quiz_count %}<a class="btn secondary" href="/admin/students/{{ student.id }}?section=tests">Открыть ответы тестов</a>{% endif %}
+      </div>{% endif %}
+      {% if lesson_needing_attendance %}<p>Нужно отметить занятие от {{ localtime(lesson_needing_attendance.starts_at) }}.</p><a class="btn secondary" href="/admin/lessons/{{ lesson_needing_attendance.id }}/attendance">Отметить посещаемость</a>{% endif %}
+      {% if lesson_needing_attendance_count > 1 %}<a class="quiet-link" href="/admin/analytics/actions/attendance?student_id={{ student.id }}">Открыть все {{ lesson_needing_attendance_count }} занятия без результата</a>{% endif %}
+      {% if student_status_events %}<p class="muted">Статус ученика изменён {{ localtime(student_status_events[0].changed_at) }}.</p>{% endif %}
+    </article>
+
+    <article class="panel">
+      <h2>Посещаемость</h2>
+      {% set attended=attendance_counts.get('conducted',0) %}{% set missed=attendance_counts.get('student_absent',0) %}{% set cancelled=attendance_counts.get('cancelled_student',0)+attendance_counts.get('cancelled_teacher',0) %}
+      {% if attendance_counts %}<p>{{ attended }} проведено · {{ missed }} ученик не явился{% if cancelled %} · {{ cancelled }} отменено{% endif %}</p>{% else %}<p class="muted">Отметок пока нет.</p>{% endif %}
+      <a href="/admin/students/{{ student.id }}?section=attendance">История посещаемости →</a>
+    </article>
+
+    <article class="panel">
+      <h2>Последнее занятие{% if last_lesson %} · {{ last_lesson.lesson_date.strftime('%d.%m.%Y') }}{% endif %}</h2>
+      {% if last_lesson %}<p class="preserve-text">{{ last_lesson.topic or last_lesson.completed or 'Краткий итог не заполнен.' }}</p><a href="/admin/students/{{ student.id }}/records/{{ last_lesson.id }}/edit?section=history">Открыть запись →</a>{% else %}<p class="muted">Записей пока нет.</p>{% endif %}
+    </article>
+  </section>
+
+  <section class="panel top-gap"><div class="section-head"><div><h2>Действия</h2></div></div>
+    <nav class="hub-actions" aria-label="Действия с учеником">
+      {% if student.active and student.learning_status=='active' %}<a class="btn primary" href="/admin/lessons/new?student_id={{ student.id }}">Создать занятие в расписании</a>{% endif %}
+      {% if next_lesson %}<a class="btn secondary" href="/admin/lessons/{{ next_lesson.id }}/edit">Перенести ближайшее</a>{% endif %}
+      {% if lesson_needing_attendance %}<a class="btn secondary" href="/admin/lessons/{{ lesson_needing_attendance.id }}/attendance">Отметить посещаемость</a>{% endif %}
+      {% if student.active and student.learning_status=='active' %}<a class="btn secondary" href="/admin/assignments?student={{ student.id }}">Выдать домашнее задание</a>
+      <a class="btn secondary" href="/admin/quizzes?student_id={{ student.id }}">Назначить тест</a>{% endif %}
+      <a class="btn secondary" href="/admin/students/{{ student.id }}/records/new?section=history">Педагогическая запись</a>
+      <a class="btn secondary" href="/admin/analytics/students/{{ student.id }}">Подробная аналитика</a>
+      <a class="btn secondary" href="/admin/finance/students/{{ student.id }}/action?kind=payment">Добавить оплату</a>
+    </nav>
+  </section>
+  {% if video_history %}<section class="panel top-gap video-history" aria-label="История видеозанятий"><h2>Прошедшие видеозанятия</h2><ul>{% for meeting in video_history %}<li><a href="/video/meetings/{{ meeting.id }}">Чат и материалы занятия от {{ localtime(meeting.ended_at) }}</a></li>{% endfor %}</ul><a href="/video/meetings/history?student_id={{ student.id }}">Все видеозанятия</a></section>{% endif %}
+  <section class="panel top-gap"><h2>Учебный контекст</h2><dl class="memory-facts">
+    {% for label,value in [('Цель занятий',student.learning_goal),('Материалы',student.learning_materials),('Текущий этап',student.learning_position)] %}{% if value %}<div><dt>{{ label }}</dt><dd class="memory-text">{{ value }}</dd></div>{% endif %}{% endfor %}
+  </dl>{% if not (student.learning_goal or student.learning_materials or student.learning_position) %}<p class="muted">Учебный контекст пока не заполнен.</p>{% endif %}<a class="text-link" href="/admin/students/{{ student.id }}/learning">Изменить учебные сведения →</a></section>
+
+  {% elif section=='schedule' %}
+  <section class="panel"><div class="section-head"><div><span class="eyebrow">ЗАНЯТИЯ УЧЕНИКА</span><h2>Расписание</h2></div>{% if student.active and student.learning_status=='active' %}<a class="btn primary" href="/admin/lessons/new?student_id={{ student.id }}">Создать занятие</a>{% endif %}</div>
+    <nav class="memory-actions" aria-label="Фильтр занятий"><a href="?section=schedule&scope=upcoming">Предстоящие</a><a href="?section=schedule&scope=past">Прошедшие</a><a href="/admin/lessons">Общий календарь</a></nav>
+    {% for lesson in schedule_lessons %}{% set mark=attendance_by_lesson.get(lesson.id) %}<article class="memory-entry"><div class="section-head"><div><h3>{{ localtime(lesson.starts_at) }}</h3><p>{{ lesson.duration_minutes }} минут</p></div><span class="chip">{{ {'scheduled':'Запланировано','cancelled':'Отменено','suppressed':'Приостановлено'}.get(lesson.state,lesson.state) }}</span></div>
+      {% if mark %}<p>Посещаемость: {{ {'conducted':'Проведено','student_absent':'Ученик не явился','teacher_absent':'Преподаватель не явился','cancelled_student':'Отменил ученик','cancelled_teacher':'Отменил преподаватель','unknown':'Не отмечено','other':'Другое'}.get(mark.outcome,mark.outcome) }}</p>{% endif %}
+      <div class="memory-actions"><a class="btn secondary" href="/admin/lessons/{{ lesson.id }}/edit">Открыть или перенести</a>{% if lesson.state=='scheduled' %}<a href="/admin/lessons/{{ lesson.id }}/attendance">Посещаемость</a>{% endif %}{% if mark and mark.outcome in ['conducted','student_absent','teacher_absent','other'] %}<a href="/admin/finance/lessons/{{ lesson.id }}">Финансы занятия</a>{% endif %}</div></article>
+    {% else %}<p class="empty">{% if schedule_scope=='past' %}Прошедших занятий не найдено.{% else %}Предстоящих занятий пока нет.{% endif %}</p>{% endfor %}
+    <nav class="memory-actions" aria-label="Страницы расписания">{% if schedule_page>1 %}<a href="?section=schedule&scope={{ schedule_scope }}&page={{ schedule_page-1 }}">Назад</a>{% endif %}<span>Страница {{ schedule_page }}</span>{% if schedule_more %}<a href="?section=schedule&scope={{ schedule_scope }}&page={{ schedule_page+1 }}">Далее</a>{% endif %}</nav>
+    {% for rule in student_series %}<details class="memory-entry"><summary>Повторяющееся расписание · {{ {'active':'Действует','paused':'Пауза','ended':'Завершено'}.get(rule.state,rule.state) }}</summary><p>{% for weekday in rule.weekdays.split(',') %}{{ ['Понедельник','Вторник','Среда','Четверг','Пятница','Суббота','Воскресенье'][weekday|int] }}{% if not loop.last %}, {% endif %}{% endfor %} · {{ rule.local_time.strftime('%H:%M') }} · {{ rule.timezone_name }}</p><a href="/admin/lesson-series/{{ rule.id }}/edit">Изменить серию</a></details>{% endfor %}
+  </section>
+
+  {% elif section=='attendance' %}
+  <section class="panel"><span class="eyebrow">РЕЗУЛЬТАТЫ ЗАНЯТИЙ</span><h2>Посещаемость</h2>
+    {% if attendance_counts %}<p>Отметки: {% for key,count in attendance_counts.items() %}{{ {'conducted':'проведено','student_absent':'ученик не явился','teacher_absent':'преподаватель не явился','cancelled_student':'отмена учеником','cancelled_teacher':'отмена преподавателем','unknown':'не отмечено','other':'другое'}.get(key,key) }} — {{ count }}{% if not loop.last %} · {% endif %}{% endfor %}</p>{% endif %}
+    {% for event,starts_at,lesson_id in attendance_events %}<article class="memory-entry"><p><strong>{{ localtime(starts_at) }}</strong> · {{ {'conducted':'Проведено','student_absent':'Ученик не явился','teacher_absent':'Преподаватель не явился','cancelled_student':'Отменил ученик','cancelled_teacher':'Отменил преподаватель','unknown':'Не отмечено','other':'Другое'}.get(event.after_outcome,event.after_outcome) }}</p><p class="muted">Запись {{ localtime(event.created_at) }}{% if event.reason %} · Причина исправления: {{ event.reason }}{% endif %}</p><a href="/admin/lessons/{{ lesson_id }}/attendance">Посмотреть занятие и историю</a></article>{% else %}<p class="empty">История посещаемости пока пуста.</p>{% endfor %}
+    <nav class="memory-actions">{% if attendance_page>1 %}<a href="?section=attendance&page={{ attendance_page-1 }}">Новее</a>{% endif %}<span>Страница {{ attendance_page }}</span>{% if attendance_more %}<a href="?section=attendance&page={{ attendance_page+1 }}">Ранее</a>{% endif %}</nav>
+  </section>
+
+  {% elif section=='homework' %}
+  <section class="panel"><div class="section-head"><div><span class="eyebrow">ЗАДАНИЯ И ОТПРАВКИ</span><h2>Домашние задания</h2></div><a class="btn primary" href="/admin/assignments?student={{ student.id }}">Открыть задания ученика</a></div>
+    {% for target,state in homework %}<article class="memory-entry"><div class="section-head"><h3>{{ target.assignment.title }}</h3><span class="chip">{{ {'todo':'Нужно выполнить','overdue':'Просрочено','pending':'Ждёт проверки','checked':'Проверено','revision':'На доработке'}.get(state,state) }}</span></div>
+      {% if target.assignment.due_at %}<p class="muted">Срок: {{ localtime(target.assignment.due_at) }}</p>{% endif %}<p class="memory-text">{{ target.assignment.description|truncate(260) }}</p><a class="btn secondary" href="/admin/assignments/{{ target.assignment.id }}{% if state=='pending' %}#student-{{ student.id }}{% endif %}">{% if state=='pending' %}Открыть проверку{% else %}Открыть задание{% endif %}</a></article>
+    {% else %}<p class="empty">Домашних заданий пока нет.</p>{% endfor %}
+    <nav class="memory-actions">{% if homework_page>1 %}<a href="?section=homework&page={{ homework_page-1 }}">Назад</a>{% endif %}<span>Страница {{ homework_page }}</span>{% if homework_more %}<a href="?section=homework&page={{ homework_page+1 }}">Далее</a>{% endif %}</nav>
+  </section>
+
+  {% elif section=='tests' %}
+  <section class="panel"><div class="section-head"><div><span class="eyebrow">НАЗНАЧЕНИЯ И ПОПЫТКИ</span><h2>Тесты</h2></div>{% if student.active and student.learning_status=='active' %}<a class="btn primary" href="/admin/quizzes?student_id={{ student.id }}">Управлять тестами</a>{% else %}<a href="/admin/quizzes?student_id={{ student.id }}">Архивные результаты</a>{% endif %}</div>
+    {% if pending_quiz_count %}<p class="alert neutral">Ответы, ожидающие проверки: {{ pending_quiz_count }}. Откройте попытку, чтобы выставить ручные оценки.</p>{% endif %}
+    {% for attempt,title in pending_quiz_attempts %}<article class="memory-entry"><div class="section-head"><h3>{{ title }}</h3><span class="chip pending">Ожидает проверки</span></div><p class="muted">Попытка №{{ attempt.number }} · отправлена {{ localtime(attempt.submitted_at) }}</p><a class="btn secondary" href="/admin/quizzes/attempts/{{ attempt.id }}">Проверить ответы</a></article>{% endfor %}
+    <h3 class="top-gap">Другие попытки</h3>{% for attempt,title in quiz_attempts %}<article class="memory-entry"><div class="section-head"><h3>{{ title }}</h3><span class="chip">{{ {'checked':'Проверен','in_progress':'В процессе'}.get(attempt.state,attempt.state) }}</span></div><p class="muted">Попытка №{{ attempt.number }} · {{ localtime(attempt.started_at) }}</p><a href="/admin/quizzes/attempts/{{ attempt.id }}">Открыть результат</a></article>{% else %}<p class="muted">Других попыток пока нет.</p>{% endfor %}
+    <h3 class="top-gap">Назначения</h3>{% for assignment,title in quiz_assignments_page %}<article class="memory-entry"><strong>{{ title }}</strong><p class="muted">{% if assignment.deadline %}Срок: {{ localtime(assignment.deadline) }}{% else %}Без срока{% endif %} · максимум попыток: {{ assignment.max_attempts }}</p></article>{% else %}<p class="muted">Активных назначений не найдено.</p>{% endfor %}
+    <nav class="memory-actions">{% if quiz_page>1 %}<a href="?section=tests&page={{ quiz_page-1 }}">Назад</a>{% endif %}<span>Страница {{ quiz_page }}</span>{% if quiz_assignments_more %}<a href="?section=tests&page={{ quiz_page+1 }}">Далее</a>{% endif %}</nav>
+  </section>
+
+  {% elif section=='progress' %}
+  <section class="panel" id="progress-top"><div class="section-head"><div><span class="eyebrow">ТЕМЫ И ПОВТОРЕНИЕ</span><h2>Прогресс</h2></div><a class="btn primary" href="/admin/students/{{ student.id }}/topics/new">Добавить тему</a></div>
+    {% if repeat_count %}<p>К повторению: {{ repeat_count }}</p>{% endif %}
+    {% for row in progress_topics %}<article class="memory-entry"><div class="section-head"><h3><a href="/admin/students/{{ student.id }}/topics/{{ row.id }}">{{ row.topic.title }}</a></h3><span class="chip">{{ topic_statuses[row.status] }}</span></div>{% if row.topic.category %}<p class="muted">{{ row.topic.category }}</p>{% endif %}<p class="memory-text">{{ row.note or 'Примечание не добавлено.' }}</p><p class="muted">Обновлено {{ localtime(row.updated_at) }}</p>{% for lesson_record in latest_topic_lessons.get(row.id,[]) %}<p>Занятие: <a href="/admin/students/{{ student.id }}/records/{{ lesson_record.id }}/edit?section=progress">{{ lesson_record.lesson_date.strftime('%d.%m.%Y') }}{% if lesson_record.lesson_time %} · {{ lesson_record.lesson_time.strftime('%H:%M') }}{% endif %} — {{ lesson_record.topic or lesson_record.completed or 'Без подробностей' }}</a></p>{% endfor %}{% with statuses=topic_statuses, quick_return='progress', quick_page=progress_page %}{% include 'admin/_topic_quick.html' %}{% endwith %}</article>{% else %}<p class="empty">Темы ещё не добавлены.</p>{% endfor %}
+    <a href="/admin/students/{{ student.id }}/topics">Все темы и история изменений →</a><nav class="memory-actions">{% if progress_page>1 %}<a href="?section=progress&page={{ progress_page-1 }}">Назад</a>{% endif %}<span>Страница {{ progress_page }}</span>{% if progress_more %}<a href="?section=progress&page={{ progress_page+1 }}">Далее</a>{% endif %}</nav>
+  </section>
+
+  {% elif section=='finance' %}
+  <section class="panel"><div class="section-head"><div><span class="eyebrow">ТОЛЬКО ДЛЯ ПРЕПОДАВАТЕЛЯ</span><h2>Финансы</h2></div><a class="btn primary" href="/admin/finance/students/{{ student.id }}">Подробный баланс</a></div>
+    <div class="hub-finance-grid"><div><span>Задолженность</span><strong>{{ rub(finance_balance.debt) }}</strong></div><div><span>Предоплата</span><strong>{{ rub(finance_balance.advance) }}</strong></div></div>
+    <p class="muted">Финансовые операции хранятся отдельно от учебной истории.</p><div class="memory-actions"><a class="btn secondary" href="/admin/finance/students/{{ student.id }}/action?kind=payment">Добавить оплату</a><a href="/admin/finance/students/{{ student.id }}/action?kind=package">Добавить абонемент</a></div>
+    <h3 class="top-gap">Последние операции</h3>{% for op in finance_operations %}<article class="memory-entry"><strong>{{ op.kind }}</strong><p>{{ op.summary }}</p><p class="muted">{{ op.effective_date.strftime('%d.%m.%Y') }} · внесено {{ localtime(op.created_at) }}</p></article>{% else %}<p class="empty">Финансовых операций пока нет.</p>{% endfor %}
+  </section>
+
+  {% elif section=='history' %}
+  <section class="panel"><div class="section-head"><div><span class="eyebrow">УЧЕБНАЯ ХРОНОЛОГИЯ</span><h2>Заметки и история</h2></div><a class="btn primary" href="/admin/students/{{ student.id }}/records/new?section=history">Педагогическая запись</a></div>
+    <p class="muted">События из сохранённых занятий, посещаемости, домашних работ, тестов и прогресса. Здесь нет финансовых операций.</p>
+    {% for event in timeline %}<article class="memory-entry"><p class="muted">{{ localtime(event.event_at) }} · {{ {'lesson':'Занятие','attendance':'Посещаемость изменена','submission':'Работа отправлена','review':'Работа проверена','test':'Тест отправлен','test_grade':'Ручная оценка изменена','record':'Педагогическая запись','record_revision':'Запись изменена','note':'Личная заметка','note_revision':'Личная заметка изменена','progress':'Прогресс по теме','status':'Изменение статуса','deadline':'Изменение дедлайна'}.get(event.event_type,event.event_type) }}</p><h3>{{ event.title or 'Событие обучения' }}</h3>{% if event.detail %}<p>{{ event.detail }}</p>{% endif %}<a href="{{ event.url }}">Открыть событие →</a></article>{% else %}<p class="empty">История пока не содержит событий.</p>{% endfor %}
+    <nav class="memory-actions">{% if history_page>1 %}<a href="?section=history&history_page={{ history_page-1 }}">Новее</a>{% endif %}<span>Страница {{ history_page }}</span>{% if history_more %}<a href="?section=history&history_page={{ history_page+1 }}">Ранее</a>{% endif %}</nav>
+  </section>
+  <section class="panel top-gap"><h2>Педагогические записи</h2><p class="muted">Результаты уроков и следующие шаги. Запись не заменяет посещаемость.</p>
+    <form method="post" action="/admin/students/{{ student.id }}/notes" class="stack hub-note-form"><input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="creation_key" value="{{ creation_key }}"><input type="hidden" name="return_section" value="history"><label>Добавить личную заметку<textarea name="body" rows="3" maxlength="4000" required></textarea></label><button class="btn secondary" type="submit">Сохранить заметку</button></form>
+    {% for row in records %}<details class="memory-entry"><summary>{{ row.lesson_date.strftime('%d.%m.%Y') }}{% if row.lesson_time %} · {{ row.lesson_time.strftime('%H:%M') }}{% endif %} — {{ (row.topic or row.completed or row.next_step or 'Без подробностей')|truncate(140) }}</summary>
+      {% for label,value in [('Проходили',row.topic),('Успели',row.completed),('Остановились',row.stopped_at),('Трудности',row.difficulties),('Следующий шаг',row.next_step)] %}{% if value %}<p class="memory-text"><strong>{{ label }}:</strong> {{ value }}</p>{% endif %}{% endfor %}
+      <p class="muted">Изменено {{ localtime(row.updated_at) }} · {{ row.timezone_name }}</p><div class="memory-actions"><a href="/admin/students/{{ student.id }}/records/{{ row.id }}/edit?section=history">Изменить</a><a href="/admin/students/{{ student.id }}/records/{{ row.id }}/delete?section=history">Удалить запись</a></div></details>{% else %}<p class="empty">Педагогических записей пока нет.</p>{% endfor %}
+    <nav class="memory-actions">{% if records_page>1 %}<a href="?section=history&records_page={{ records_page-1 }}&note_page={{ note_page }}">Новее</a>{% endif %}<span>Страница записей {{ records_page }}</span>{% if records_more %}<a href="?section=history&records_page={{ records_page+1 }}&note_page={{ note_page }}">Ранее</a>{% endif %}</nav>
+    <h3 class="top-gap">Личные заметки</h3><p class="muted">Содержимое заметок показывается только здесь, не в сводке ученика.</p>
+    {% for row in notes %}<article class="memory-entry"><p class="preserve-text">{{ row.body }}</p><p class="muted">Изменено {{ localtime(row.updated_at) }}</p><div class="memory-actions"><a href="/admin/students/{{ student.id }}/notes/{{ row.id }}/edit?section=history">Изменить</a><a href="/admin/students/{{ student.id }}/notes/{{ row.id }}/delete?section=history">Удалить заметку</a></div></article>{% else %}<p class="empty">Личных заметок пока нет.</p>{% endfor %}
+    <nav class="memory-actions">{% if note_page>1 %}<a href="?section=history&note_page={{ note_page-1 }}&records_page={{ records_page }}">Новее</a>{% endif %}<span>Страница заметок {{ note_page }}</span>{% if notes_more %}<a href="?section=history&note_page={{ note_page+1 }}&records_page={{ records_page }}">Ранее</a>{% endif %}</nav>
+  </section>
+  {% endif %}
+</div>
+<script src="/static/student-hub.js?v=stage10b1-20261115" defer></script>
+{% endblock %}

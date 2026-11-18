@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block title %}Папки{% endblock %}
+{% block content %}
+<header class="page-head"><div><span class="eyebrow">ОРГАНИЗАЦИЯ</span><h1>Папки</h1><p class="muted">Папки учеников и папки заданий — независимые системы.</p></div></header>
+<div class="two-columns">
+{% for kind, label, items in [('students','Ученики',student_folders),('assignments','Задания',assignment_folders)] %}
+<section class="panel"><h2>{{ label }}</h2><form class="stack" method="post" action="/admin/folders"><input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="kind" value="{{ kind }}"><label>Новая папка<input type="text" name="name" maxlength="80" required placeholder="Например: {{ 'ОГЭ / 9 класс' if kind=='students' else 'Тесты и грамматика' }}"></label><button class="btn secondary" type="submit">+ Добавить папку</button></form>
+<div class="folder-list">{% for folder in items %}<div class="folder-row"><span>▱ &nbsp; {{ folder.name }}</span><form action="/admin/folders/{{ kind }}/{{ folder.id }}/delete" method="post"><input type="hidden" name="csrf" value="{{ csrf }}"><button class="text-link button-link" data-confirm="Удалить пустую папку?" type="submit">Удалить</button></form></div>{% else %}<p class="empty">Папок ещё нет.</p>{% endfor %}</div><p class="helper">Удалить можно только пустую папку.</p></section>
+{% endfor %}
+</div>
+{% endblock %}

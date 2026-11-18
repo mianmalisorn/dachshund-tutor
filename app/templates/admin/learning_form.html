@@ -1,0 +1,7 @@
+{% extends 'base.html' %}
+{% block title %}Учебные сведения{% endblock %}
+{% block content %}<div class="student-memory"><h1>Учебные сведения</h1><p>{{ student.display_name }} · видны только вам</p>
+{% if form_error %}<p class="flash error" role="alert">{{ form_error }}</p><p><a href="/admin/students/{{ student.id }}/learning" target="_blank" rel="noopener">Открыть актуальную карточку в новой вкладке</a></p>{% endif %}
+<form class="panel stack" method="post"><input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="profile_version" value="{{ values.profile_version }}"><input type="hidden" name="return_section" value="{{ return_section }}">
+{% for key,spec in fields.items() %}<label>{{ spec[0] }}<textarea rows="{{ 4 if key=='internal_notes' else 2 }}" name="{{ key }}" maxlength="{{ spec[1] }}">{{ values.get(key,'') }}</textarea></label>{% endfor %}
+<p class="muted">Все поля необязательны. Общая заметка — та же, что в настройках аккаунта.</p><div class="memory-actions"><button class="btn primary">Сохранить сведения</button><a class="btn secondary" href="/admin/students/{{ student.id }}?section={{ return_section }}">К карточке</a></div></form></div>{% endblock %}

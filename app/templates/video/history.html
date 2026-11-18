@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block title %}История видеозанятий{% endblock %}
+{% block page_assets %}<link rel="stylesheet" href="/static/video-call.css">{% endblock %}
+{% block content %}
+<header class="page-head"><div><h1>История видеозанятий</h1><p class="muted">Переписка и материалы сохраняются после завершения звонка.</p></div><a class="btn secondary" href="{{ '/admin/students/' ~ student_id if user.role == 'admin' and student_id else '/admin/students' if user.role == 'admin' else '/student' }}">К кабинету</a></header>
+<section class="panel video-history" aria-label="Прошедшие видеозанятия">
+  {% if meetings %}
+  <ul>{% for meeting in meetings %}<li><a href="/video/meetings/{{ meeting.id }}">{{ localtime(meeting.ended_at) }}{% if user.role == 'admin' and student_names %} · {{ student_names.get(meeting.student_id, 'Ученик') }}{% endif %} — чат и материалы</a></li>{% endfor %}</ul>
+  {% else %}<p>Завершённых видеозанятий пока нет.</p>{% endif %}
+  {% set history_path = '/video/meetings/history?' ~ ('student_id=' ~ student_id ~ '&' if student_id else '') %}
+  <nav class="video-history-pages" aria-label="Страницы истории">
+    {% if page > 1 %}<a class="btn secondary" href="{{ history_path }}page={{ page - 1 }}">← Предыдущая</a>{% endif %}
+    {% if has_next %}<a class="btn secondary" href="{{ history_path }}page={{ page + 1 }}">Следующая →</a>{% endif %}
+  </nav>
+</section>
+{% endblock %}

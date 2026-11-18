@@ -1,0 +1,97 @@
+{% macro nav_icon(kind) -%}
+<svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+  {% if kind == 'overview' %}<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>
+  {% elif kind == 'students' %}<circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/>
+  {% elif kind == 'schedule' %}<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 11h18M8 15h2M14 15h2"/>
+  {% elif kind == 'assignments' %}<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/>
+  {% elif kind == 'quizzes' %}<path d="M8 4h11a2 2 0 0 1 2 2v14H8zM8 4a4 4 0 0 0-4 4v11a2 2 0 0 0 2 2h13"/><path d="m11 12 2 2 4-4"/>
+  {% elif kind == 'analytics' %}<path d="M4 20V10M10 20V4M16 20v-7M22 20v-9"/>
+  {% elif kind == 'topics' %}<path d="M12 5c-3-2-6-2-9-1v15c3-1 6-1 9 1 3-2 6-2 9-1V4c-3-1-6-1-9 1ZM12 5v15"/>
+  {% elif kind == 'folders' %}<path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v10H3z"/>
+  {% elif kind == 'finance' %}<rect x="3" y="6" width="18" height="14" rx="2"/><path d="M3 10h18M16 16h2"/>
+  {% elif kind == 'reminders' %}<path d="M5 17h14l-2-3V9a5 5 0 0 0-10 0v5zM10 20h4"/>
+  {% elif kind == 'personal' %}<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 10h8M8 14h5"/>
+  {% elif kind == 'access' %}<circle cx="8" cy="10" r="3"/><path d="M2 20v-2a6 6 0 0 1 12 0v2M17 8h5M19.5 5.5v5"/>
+  {% elif kind == 'account' %}<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9 7 7M17 17l2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1"/>
+  {% endif %}
+</svg>
+{%- endmacro %}
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>{% block title %}Tutor{% endblock %} · Tutor</title>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon" sizes="any">
+  <link rel="icon" href="/static/favicon-32.png" type="image/png" sizes="32x32">
+  <link rel="icon" href="/static/favicon-256.png" type="image/png" sizes="256x256">
+  <link rel="apple-touch-icon" href="/static/apple-touch-icon.png" sizes="180x180">
+  <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="/static/admin-theme.css?v=stage10f-20261117">
+  <link rel="stylesheet" href="/static/site-theme.css?v=stage10d-20261117">
+  {% if user and user.role == 'admin' %}<link rel="stylesheet" href="/static/dashboard.css?v=stage10e-20261117">{% endif %}
+  {% if request.url.path == '/admin/lessons' %}<link rel="stylesheet" href="/static/calendar.css?v=stage10f-20261117">{% endif %}
+  <script defer src="/static/app.js?v=stage10b1-20261115"></script>
+  {% block page_assets %}{% endblock %}
+
+</head>
+<body class="tutor-theme {% if user and user.role == 'admin' %}admin-mode {% if request.url.path == "/admin" %}dashboard-mode{% endif %}{% elif user and user.role == 'student' %}student-mode{% else %}guest-mode{% endif %}">
+<a class="skip-link" href="#main-content">К основному содержимому</a>
+<div class="site-frame">
+{% if user %}
+<aside class="sidebar">
+  <a class="brand brand-cattutor" aria-label="CatTutor · на главную" href="{% if user.role=='admin' %}/admin{% elif user.role=='sender' %}/personal{% else %}/student{% endif %}">
+    <img class="brand-wordmark" src="/static/brand-cattutor-dark.png" alt="CatTutor" width="180" height="50">
+  </a>
+  {% if user.role == 'admin' %}<button class="mobile-nav-toggle btn secondary" type="button" data-mobile-nav-toggle aria-controls="main-nav" aria-expanded="false"><span data-mobile-nav-label>Меню</span><span aria-hidden="true">☰</span></button>{% endif %}
+  <nav id="main-nav" aria-label="Основное меню" class="nav">
+    {% if user.role == 'admin' %}
+    <div class="nav-group nav-primary" role="group" aria-labelledby="nav-work-heading">
+      <span class="nav-heading" id="nav-work-heading">Работа</span>
+      <a href="/admin" class="nav-link {% if request.url.path=='/admin' %}active{% endif %}" {% if request.url.path=='/admin' %}aria-current="page"{% endif %}>{{ nav_icon('overview') }} Рабочий день</a>
+      <a href="/admin/students" class="nav-link {% if request.url.path.startswith('/admin/students') %}active{% endif %}" {% if request.url.path.startswith('/admin/students') %}aria-current="page"{% endif %}>{{ nav_icon('students') }} Ученики</a>
+      <a href="/admin/lessons" class="nav-link {% if request.url.path.startswith('/admin/lessons') or request.url.path.startswith('/admin/lesson-series') or request.url.path.startswith('/admin/attendance') %}active{% endif %}" {% if request.url.path.startswith('/admin/lessons') or request.url.path.startswith('/admin/lesson-series') or request.url.path.startswith('/admin/attendance') %}aria-current="page"{% endif %}>{{ nav_icon('schedule') }} Расписание</a>
+      <a href="/admin/assignments" class="nav-link {% if request.url.path.startswith('/admin/assignments') or request.url.path.startswith('/admin/reviews') %}active{% endif %}" {% if request.url.path.startswith('/admin/assignments') or request.url.path.startswith('/admin/reviews') %}aria-current="page"{% endif %}>{{ nav_icon('assignments') }} Домашние задания</a>
+    </div>
+    <div class="nav-group nav-secondary" role="group" aria-labelledby="nav-learning-heading">
+      <span class="nav-heading" id="nav-learning-heading">Учёба</span>
+      <a href="/admin/quizzes" class="nav-link {% if request.url.path.startswith('/admin/quizzes') %}active{% endif %}" {% if request.url.path.startswith('/admin/quizzes') %}aria-current="page"{% endif %}>{{ nav_icon('quizzes') }} Тесты</a>
+      <a href="/admin/topics" class="nav-link {% if request.url.path.startswith('/admin/topics') or '/topics' in request.url.path %}active{% endif %}" {% if request.url.path.startswith('/admin/topics') or '/topics' in request.url.path %}aria-current="page"{% endif %}>{{ nav_icon('topics') }} Темы и прогресс</a>
+      <a href="/admin/folders" class="nav-link {% if request.url.path.startswith('/admin/folders') %}active{% endif %}" {% if request.url.path.startswith('/admin/folders') %}aria-current="page"{% endif %}>{{ nav_icon('folders') }} Папки</a>
+    </div>
+    {% elif user.role == 'student' %}
+    <a href="/student" class="nav-link {% if request.url.path == '/student' or request.url.path.startswith('/student/assignments') %}active{% endif %}" {% if request.url.path == '/student' or request.url.path.startswith('/student/assignments') %}aria-current="page"{% endif %}>{{ nav_icon('assignments') }} Мои задания</a>
+    <a href="/student/quizzes" class="nav-link {% if request.url.path.startswith('/student/quizzes') %}active{% endif %}" {% if request.url.path.startswith('/student/quizzes') %}aria-current="page"{% endif %}>{{ nav_icon('quizzes') }} Мои тесты</a>
+    <a href="/student/lessons" class="nav-link {% if request.url.path=='/student/lessons' %}active{% endif %}" {% if request.url.path=='/student/lessons' %}aria-current="page"{% endif %}>{{ nav_icon('schedule') }} Мои занятия</a>
+    {% endif %}
+    {% if user.role == 'sender' %}<a href="/personal" class="nav-link {% if request.url.path.startswith('/personal') %}active{% endif %}" {% if request.url.path.startswith('/personal') %}aria-current="page"{% endif %}>{{ nav_icon('personal') }} Личные напоминания</a>{% endif %}
+    {% if user.role != 'admin' %}<div class="nav-account"><a href="/account" class="nav-link {% if request.url.path == '/account' %}active{% endif %}" {% if request.url.path == '/account' %}aria-current="page"{% endif %}>{{ nav_icon('account') }} Настройки аккаунта</a></div>{% endif %}
+  </nav>
+  <div class="sidebar-bottom">
+    {% if user.role == 'admin' and not user.must_change_password %}<button class="btn secondary breathing-trigger sidebar-pause" type="button" data-breathing-open aria-controls="breathing-panel" aria-haspopup="dialog" aria-label="Минута на подышать" title="Минута на подышать">Пауза · 1 мин</button>{% endif %}
+    <a href="/account" class="profile account-card {% if request.url.path == '/account' or request.url.path.startswith('/admin/analytics') or request.url.path.startswith('/admin/finance') or request.url.path.startswith('/admin/reminders') or request.url.path.startswith('/admin/personal-senders') or request.url.path.startswith('/admin/history') or request.url.path.startswith('/admin/productivity/notifications') or request.url.path.startswith('/personal') %}active{% endif %}" aria-label="Настройки аккаунта · {{ user.display_name }}">
+      {% if user.role == 'admin' %}<img class="account-cat" src="/static/favicon-256.png" alt="" width="42" height="42">{% elif user.role == 'student' %}<img class="student-avatar" src="/static/student-avatar-default.png" alt="" width="42" height="42">{% else %}<span class="avatar">{{ user.display_name[0]|upper }}</span>{% endif %}
+      <span class="profile-name">{{ user.display_name }}{% if user.role=='student' %}<small>Ученик</small>{% endif %}</span><span class="account-card-arrow" aria-hidden="true">›</span>
+    </a>
+  </div>
+</aside>
+{% endif %}
+<main id="main-content" class="main-content {% if not user %}main-guest{% endif %}" tabindex="-1">
+  {% if user and user.role=='admin' and not user.must_change_password %}{% include 'admin/_productivity.html' %}{% endif %}
+  <div class="workspace-scroll">
+  {% if request.app.state.settings.demo_mode %}<p class="demo-label" role="note">Черновой вариант · локальная демонстрация · данные вымышлены</p>{% endif %}
+  {% if notice and notice in ['saved','updated','reviewed','student_created','assignment_created','lesson_created','password_reset','deleted','password_changed','revision_requested'] %}
+  <div class="alert success" role="status">{% set texts = {'revision_requested':'Работа возвращена на доработку.', 'saved':'Сохранено.', 'updated':'Изменения сохранены.', 'reviewed':'Работа проверена.', 'submitted':'Работа отправлена.', 'student_created':'Аккаунт ученика создан.', 'assignment_created':'Задание создано.', 'lesson_created':'Занятие добавлено.', 'password_reset':'Пароль сброшен. Старые сеансы завершены.', 'deleted':'Удалено.', 'password_changed':'Пароль изменён.'} %}{{ texts[notice] }}</div>
+  {% endif %}
+  {% if submission_message %}<div class="alert success" role="status">{{ submission_message }}</div>{% endif %}
+  {% block content %}{% endblock %}
+  </div>
+  {% if user and user.role=='admin' and not user.must_change_password %}
+  {% if mascot and mascot.enabled and mascot.quote and mascot.asset_url %}<div class="admin-utilities">{% include 'admin/_mascot.html' %}</div>{% endif %}
+  {% include 'admin/_breathing.html' %}
+  {% endif %}
+</main>
+</div>
+</body>
+</html>

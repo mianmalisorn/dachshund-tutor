@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block title %}{{ title }} · учебная аналитика{% endblock %}
+{% block content %}
+<article class="learning-report actionable-list-page">
+  <link rel="stylesheet" href="/static/analytics.css">
+  <header class="page-head">
+    <div><p class="muted">{{ tz }}</p>
+      <h1>{{ title }}{% if student %} · {{ student.display_name }}{% endif %}</h1>
+    </div>
+    <a class="btn secondary" href="{{ back_url }}">Вернуться к аналитике</a>
+  </header>
+  <section class="panel" aria-live="polite">
+    <p><strong>{{ rows|length }}</strong> записей</p>
+    {% if kind in ['homework','overdue'] %}
+      {% for target in rows %}
+        <article class="action-row"><div><h2>{{ target.assignment.title }}</h2><p><a href="/admin/students/{{ target.student_id }}">{{ target.student.display_name }}</a> · {% if target.assignment.due_at %}срок {{ localtime(target.assignment.due_at) }}{% else %}без срока{% endif %}</p></div><a class="btn secondary" href="{% if kind=='homework' %}/admin/reviews?target={{ target.id }}{% else %}/admin/assignments/{{ target.assignment_id }}{% endif %}">{% if kind=='homework' %}Открыть проверку{% else %}Открыть задание{% endif %}</a></article>
+      {% else %}<p class="empty">Сейчас таких записей нет.</p>{% endfor %}
+    {% elif kind=='quizzes' %}
+      {% for attempt, name, quiz_title in rows %}<article class="action-row"><div><h2>{{ quiz_title }}</h2><p><a href="/admin/students/{{ attempt.student_id }}">{{ name }}</a> · попытка {{ attempt.number }} · отправлена {{ localtime(attempt.submitted_at) }}</p></div><a class="btn secondary" href="/admin/quizzes/attempts/{{ attempt.id }}">Открыть ручную оценку</a></article>
+      {% else %}<p class="empty">Сейчас тестов на ручную оценку нет.</p>{% endfor %}
+    {% elif kind=='attendance' %}
+      {% for lesson, name in rows %}<article class="action-row"><div><h2>{{ name }}</h2><p>{{ localtime(lesson.starts_at) }} · завершённое занятие без результата</p></div><a class="btn secondary" href="/admin/lessons/{{ lesson.id }}/attendance">Зафиксировать результат</a></article>
+      {% else %}<p class="empty">Сейчас неотмеченных прошедших занятий нет.</p>{% endfor %}
+    {% else %}
+      <p>Правило: минимум две сохранённые отметки «ученик не явился» за последние 90 дней.</p>
+      {% for group in rows %}<article class="action-row"><div><h2><a href="/admin/students/{{ group[0][0].student_id }}">{{ group[0][1] }}</a> · {{ group|length }} пропуска</h2><p>{% for lesson, name in group %}<a href="/admin/lessons/{{ lesson.id }}/attendance">{{ localtime(lesson.starts_at) }}</a>{% if not loop.last %} · {% endif %}{% endfor %}</p></div></article>
+      {% else %}<p class="empty">За последние 90 дней повторных документированных пропусков нет.</p>{% endfor %}
+    {% endif %}
+  </section>
+</article>
+{% endblock %}

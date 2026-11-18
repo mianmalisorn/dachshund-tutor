@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block title %}{{ assignment.title }}{% endblock %}
+{% block content %}
+{% if in_review_queue %}<div class="alert neutral">Проверяем по одной работе · Осталось: {{ queue_count }}. После решения откроется следующая отправка.</div>{% endif %}
+<header class="page-head"><div><span class="eyebrow">ЗАДАНИЕ #{{ assignment.id }}</span><h1>{{ assignment.title }}</h1><p class="muted">Дедлайн: {{ localtime(assignment.due_at) }} · {{ assignment.targets|length }} учеников</p></div><a href="{{ assignment_list_url }}" class="btn secondary">← К списку заданий</a></header>
+<div class="two-columns uneven">
+<section class="panel"><h2>Содержание</h2>{% if in_review_queue %}<details><summary>Показать инструкцию</summary>{% endif %}<p class="preserve-text">{{ assignment.description or 'Описание не добавлено.' }}</p>{% if in_review_queue %}</details>{% endif %}
+{% if assignment.attachments %}<h3>Материалы задания</h3><div class="file-list">{% for file in assignment.attachments %}<a href="/files/{{ file.id }}" class="file-link">↓ {{ file.filename }} <small>({% if file.size_bytes < 1024 %}{{ file.size_bytes }} Б{% else %}{{ (file.size_bytes/1024)|round|int }} КБ{% endif %})</small></a>{% endfor %}</div>{% endif %}
+<details class="top-gap"><summary>Изменить задание и добавить материалы</summary><form method="post" action="/admin/assignments/{{ assignment.id }}/edit" enctype="multipart/form-data" class="stack top-gap"><input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="version" value="{{ assignment.version }}"><label>Название<input type="text" name="title" value="{{ assignment.title }}" maxlength="180" required></label><label>Описание<textarea name="description" maxlength="10000" rows="5">{{ assignment.description }}</textarea></label><label>Дедлайн<input type="datetime-local" name="due_at" value="{{ inputtime(assignment.due_at) }}" required></label><label>Папка<select name="folder_id"><option value="">Без папки</option>{% for folder in folders %}<option value="{{ folder.id }}" {% if folder.id==assignment.folder_id %}selected{% endif %}>{{ folder.name }}</option>{% endfor %}</select></label><label>Добавить материалы<input type="file" name="files" multiple accept="{{ upload_accept }}"></label><button class="btn secondary" type="submit">Сохранить изменения</button></form></details>
+</section>
+<section class="panel"><h2>Сводка</h2><div class="summary-list"><div><span>Назначено</span><strong>{{ assignment.targets|length }}</strong></div><div><span>Папка</span><strong>{{ assignment.folder.name if assignment.folder else 'Без папки' }}</strong></div><div><span>Создано</span><strong>{{ localtime(assignment.created_at) }}</strong></div></div><p class="helper">Статус каждого ученика рассчитывается по его последней отправке.</p></section>
+</div>
+<section class="section-space"><h2>Работы учеников</h2><div class="assignment-grid">
+{% for t in display_targets | sort(attribute='student.display_name') %}
+{% include 'admin/_submission_card.html' %}{% else %}<p class="empty">Задание никому не назначено.</p>{% endfor %}
+</div></section>
+{% if deadline_events %}<details class="panel"><summary>История сроков</summary>{% for e in deadline_events %}<p>{{ localtime(e.created_at) }}: {{ localtime(e.previous_due_at) }} → {{ localtime(e.due_at) }}</p>{% endfor %}</details>{% endif %}{% endblock %}

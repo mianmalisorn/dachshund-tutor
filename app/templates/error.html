@@ -1,0 +1,3 @@
+{% extends 'base.html' %}
+{% block title %}Ошибка {{ error_code }}{% endblock %}
+{% block content %}<section class="panel error-panel"><span class="eyebrow">НЕ УДАЛОСЬ ЗАВЕРШИТЬ ЗАПРОС</span><h1>Ошибка {{ error_code }}</h1><p role="alert">{{ error_text }}</p>{% if review_recovery %}<label>Ваш комментарий — можно скопировать перед обновлением<textarea readonly rows="5">{{ review_recovery.comment }}</textarea></label><p>Проверьте актуальную отправку перед повторным решением.</p><a href="{{ review_recovery.url }}" class="btn primary">Открыть актуальную работу</a>{% else %}<a href="/" class="btn primary">Вернуться в кабинет</a>{% endif %}</section>{% endblock %}

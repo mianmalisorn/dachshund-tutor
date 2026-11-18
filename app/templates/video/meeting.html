@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% block title %}Видеозанятие{% endblock %}
+{% block page_assets %}
+<link rel="stylesheet" href="/static/video-call.css?v=stage10f-20261117">
+{% if meeting.state != 'ended' %}
+<script defer src="/static/vendor/livekit-client.umd.js"></script>
+<script defer src="/static/video-call.js?v=stage10b5-20261116"></script>
+<script defer src="/static/video-layout.js?v=stage10f-20261117"></script>
+<script defer src="/static/video-float.js?v=stage10e-20261117"></script>
+{% endif %}
+<script defer src="/static/video-chat.js?v=stage10f-20261117"></script>
+<script defer src="/static/video-materials.js?v=stage10f-20261117"></script>
+{% endblock %}
+{% block content %}
+<section class="video-page" data-video-meeting="{{ meeting.id }}" data-video-user-id="{{ user.id }}" data-video-role="{{ user.role }}" data-video-state="{{ meeting.state }}" data-video-chat-writable="{{ 'true' if chat_writable else 'false' }}">
+  <header class="page-head"><div><h1>{% if counterpart_name %}Видеозанятие · {{ counterpart_name }}{% else %}Видеозанятие с {{ 'учеником' if user.role == 'admin' else 'преподавателем' }}{% endif %}</h1><p class="muted" role="status" aria-live="polite" data-video-status>{{ 'Занятие завершено' if meeting.state == 'ended' else 'Подготовка к подключению' }}</p></div>{% if meeting.state == 'ended' %}<a class="btn secondary" href="{{ '/video/meetings/history?student_id=' ~ meeting.student_id if user.role == 'admin' else '/video/meetings/history' }}">К списку истории</a>{% else %}<a class="btn secondary" href="{{ '/admin/students/' ~ meeting.student_id if user.role == 'admin' else '/student' }}">К кабинету</a>{% endif %}</header>
+  {% if meeting.state == 'ended' %}<section class="panel video-history-summary" aria-label="Сведения о завершённом занятии"><p><strong>Статус:</strong> Занятие завершено</p><p><strong>Преподаватель:</strong> {{ teacher_name }} · <strong>Ученик:</strong> {{ student_name }}</p><p><strong>Начато:</strong> {{ localtime(meeting.created_at) }} · <strong>Завершено:</strong> {{ localtime(meeting.ended_at) }}</p></section>{% endif %}
+  <input type="hidden" data-video-csrf value="{{ csrf }}">
+  {% if meeting.state != 'ended' %}
+  <p class="video-error" role="alert" data-video-error hidden></p>
+  <div class="video-layout"><div class="video-media-column">
+  <div class="video-stage" data-video-stage data-video-primary="remote" data-video-has-remote-camera="false" data-video-has-local-camera="false">
+    <section class="video-tile video-remote">{% if user.role == 'admin' %}<div class="video-float-toolbar"><button class="video-float-drag" type="button" data-video-float-drag aria-label="Переместить видео ученика" title="Переместить видео ученика стрелками или перетаскиванием" hidden>↕</button><button class="video-float-toggle" type="button" data-video-float-toggle aria-pressed="false" title="Плавающее окно внутри страницы">Открепить видео</button></div>{% endif %}<div class="video-media" data-video-remote></div><p data-video-remote-label>Ожидание второго участника</p></section>
+    <section class="video-tile video-local"><div class="video-media" data-video-local></div><p data-video-local-label>Вы · камера выключена</p></section>
+    <section class="video-tile video-screen" data-video-remote-screen-tile hidden><div class="video-media" data-video-screen-remote></div><p>Экран собеседника</p></section>
+    <section class="video-tile video-screen" data-video-local-screen-tile hidden><div class="video-media" data-video-screen-local></div><p>Ваш экран</p></section>
+  </div>
+  <div class="video-controls" role="group" aria-label="Управление видеозвонком">
+    <button class="btn primary" type="button" data-video-join>Подключиться</button>
+    <button class="btn secondary" type="button" data-video-mic disabled aria-pressed="false">Включить микрофон</button>
+    <button class="btn secondary" type="button" data-video-camera disabled aria-pressed="false">Включить камеру</button>
+    <button class="btn secondary" type="button" data-video-screen disabled aria-pressed="false">Показать экран</button>
+    <button class="btn secondary" type="button" data-video-audio hidden>Включить звук собеседника</button>
+    <button class="btn secondary" type="button" data-video-leave disabled>Покинуть звонок</button>
+    <button class="btn secondary" type="button" data-video-chat-jump aria-controls="video-chat-panel" aria-expanded="true">Чат <span class="video-unread" data-video-chat-unread hidden></span></button>
+    <button class="btn secondary" type="button" data-video-materials-jump aria-controls="video-materials-panel" aria-expanded="true">Материалы <span class="video-unread" data-video-materials-unread hidden></span></button>
+    {% if user.role == 'admin' %}<button class="btn danger" type="button" data-video-end>Завершить для всех</button>{% endif %}
+  </div>
+  </div>
+  {% endif %}
+  {% if meeting.state != 'ended' %}<div class="video-side-rail"><div class="video-side-tabs" role="group" aria-label="Панель занятия"><button class="btn secondary" type="button" data-video-side-tab="chat" aria-controls="video-chat-panel">Чат <span class="video-unread" data-video-chat-unread hidden></span></button><button class="btn secondary" type="button" data-video-side-tab="materials" aria-controls="video-materials-panel">Материалы <span class="video-unread" data-video-materials-unread hidden></span></button></div>{% endif %}
+  <div class="video-extras"{% if meeting.state != 'ended' %} data-video-extras{% endif %}>
+  <section class="panel video-chat" id="video-chat-panel" aria-label="Чат видеозанятия" data-video-chat>
+    <span class="video-sr-only" aria-live="polite" aria-atomic="true" data-video-chat-announcement></span>
+    <div class="section-head video-chat-head"><h2>Чат занятия</h2><button class="btn secondary" type="button" data-video-chat-toggle aria-expanded="true" aria-controls="video-chat-body">Скрыть чат</button><button class="btn secondary video-panel-close" type="button" data-video-panel-close="chat">К видео</button></div>
+    <div id="video-chat-body" data-video-chat-body>
+      <p class="muted video-chat-status" role="status" aria-live="polite" data-video-chat-status>Загружаем сообщения…</p>
+      <button class="btn secondary video-chat-older" type="button" data-video-chat-older hidden>Показать ранние сообщения</button>
+      <ol class="video-chat-messages" data-video-chat-messages aria-label="Сообщения занятия"></ol>
+      <form class="video-chat-form" data-video-chat-form {% if meeting.state == 'ended' %}hidden{% endif %}>
+        <label for="video-chat-text">Сообщение</label>
+        <textarea id="video-chat-text" data-video-chat-text rows="3" maxlength="2000" placeholder="Напишите сообщение" {% if not chat_writable %}disabled{% endif %}></textarea>
+        <div class="video-chat-actions"><span class="muted" data-video-chat-hint>Enter — отправить, Shift+Enter — новая строка</span><button class="btn primary" type="submit" data-video-chat-send {% if not chat_writable %}disabled{% endif %}>Отправить</button></div>
+      </form>
+    </div>
+  </section>
+  <section class="panel video-materials" id="video-materials-panel" aria-label="Материалы видеозанятия" data-video-materials>
+    <span class="video-sr-only" aria-live="polite" aria-atomic="true" data-video-materials-announcement></span>
+    <div class="video-materials-head"><h2>Материалы занятия</h2><button class="btn secondary video-panel-close" type="button" data-video-panel-close="materials">К видео</button></div>
+    <p class="muted video-materials-status" role="status" aria-live="polite" data-video-materials-status>Загружаем материалы…</p>
+    <ul class="video-materials-list" data-video-materials-list aria-label="Файлы и ссылки занятия"></ul>
+    {% if user.role == 'admin' %}
+    <div class="video-materials-editor" data-video-materials-editor>
+      <form class="video-materials-form" data-video-materials-file-form {% if meeting.state == 'ended' %}hidden{% endif %}>
+        <label for="video-material-file">Добавить файл</label>
+        <input id="video-material-file" type="file" name="file" accept="{{ upload_accept }}" required data-video-material-file>
+        <button class="btn primary" type="submit" data-video-material-file-submit>Загрузить файл</button>
+      </form>
+      <form class="video-materials-form" data-video-materials-link-form {% if meeting.state == 'ended' %}hidden{% endif %}>
+        <label for="video-material-title">Добавить ссылку</label>
+        <input id="video-material-title" name="title" type="text" maxlength="200" placeholder="Название материала" required data-video-material-title>
+        <input name="url" type="url" maxlength="2048" placeholder="https://…" aria-label="Адрес ссылки" required data-video-material-url>
+        <button class="btn secondary" type="submit" data-video-material-link-submit>Добавить ссылку</button>
+      </form>
+      <p class="muted video-materials-readonly" data-video-materials-readonly {% if meeting.state != 'ended' %}hidden{% endif %}>Встреча завершена. Материалы доступны для просмотра.</p>
+    </div>
+    {% endif %}
+  </section>
+  </div>
+  {% if meeting.state != 'ended' %}</div></div>{% endif %}
+</section>
+{% endblock %}

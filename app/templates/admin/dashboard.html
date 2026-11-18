@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% from 'admin/_dashboard_components.html' import empty_state, status, action_link %}
+{% block title %}Рабочий день{% endblock %}
+{% block content %}
+<div class="dashboard-page">
+  <header class="page-head dashboard-hero">
+    <div><h1>Рабочий день</h1></div>
+    <a class="btn primary" href="/admin/lessons/new">+ Создать занятие</a>
+  </header>
+
+  {% if schedule_errors %}<div class="alert error dashboard-warning" role="alert"><strong>Расписание обновлено не полностью.</strong> Некоторые регулярные встречи недоступны для актуального просмотра. <a href="/admin/lessons">Проверить расписание</a></div>{% endif %}
+
+  <section class="dashboard-section" aria-labelledby="attention-title">
+    <div class="section-head"><div><h2 id="attention-title">Требует внимания</h2></div><span class="dashboard-total">{{ actionable_count + quiz_review_count }}</span></div>
+    {% if actionable_count or quiz_review_count %}<div class="dashboard-attention-grid">
+      <article class="panel dashboard-card attention-card">
+        <div class="section-head"><div><h3>Домашние задания со сроком</h3></div><span class="chip overdue">{{ actionable_count }}</span></div>
+        {% if actionable %}<ul class="dashboard-list">{% for target, code in actionable %}<li class="dashboard-row"><div class="dashboard-copy"><a class="dashboard-primary-link" href="/admin/assignments/{{ target.assignment_id }}">{{ target.assignment.title }}</a><span><a class="quiet-link" href="/admin/students/{{ target.student_id }}">{{ target.student.display_name }}</a> · срок {{ localtime(target.assignment.due_at) }}</span></div><div class="dashboard-actions">{{ status(status_labels[code], code) }}{{ action_link('/admin/assignments/' ~ target.assignment_id, 'Открыть работу') }}</div></li>{% endfor %}</ul>{% if actionable_count > actionable|length %}<a class="quiet-link dashboard-more" href="/admin/assignments?status=overdue">Ещё {{ actionable_count - actionable|length }} · все задания</a>{% endif %}{% else %}{{ empty_state('Срочных заданий нет') }}{% endif %}
+      </article>
+      <article class="panel dashboard-card attention-card">
+        <div class="section-head"><div><h3>Тесты на ручную оценку</h3></div><span class="chip pending">{{ quiz_review_count }}</span></div>
+        {% if quiz_reviews %}<ul class="dashboard-list">{% for attempt, student_name, quiz_title in quiz_reviews %}<li class="dashboard-row"><div class="dashboard-copy"><a class="dashboard-primary-link" href="/admin/quizzes/attempts/{{ attempt.id }}">{{ quiz_title }}</a><span><a class="quiet-link" href="/admin/students/{{ attempt.student_id }}">{{ student_name }}</a> · попытка {{ attempt.number }}</span></div><div class="dashboard-actions">{{ action_link('/admin/quizzes/attempts/' ~ attempt.id, 'Оценить') }}</div></li>{% endfor %}</ul>{% if quiz_review_count > quiz_reviews|length %}<a class="quiet-link dashboard-more" href="/admin/quizzes">Все попытки на проверку · {{ quiz_review_count }}</a>{% endif %}{% else %}{{ empty_state('Оценок не ожидается') }}{% endif %}
+      </article>
+    </div>{% else %}<p class="dashboard-empty">Срочных задач нет.</p>{% endif %}
+  </section>
+
+  <section class="dashboard-section" aria-labelledby="today-title">
+    <div class="section-head"><div><h2 id="today-title">{{ today_caption }}</h2></div><a class="quiet-link" href="/admin/lessons?day={{ today.isoformat() }}">К расписанию</a></div>
+    {% if today_lessons %}<ol class="dashboard-today-list">{% for item in today_lessons %}{% set lesson = item.lesson %}<li class="panel dashboard-today-row {% if item.is_next %}is-next{% endif %}">
+      <time class="dashboard-time" datetime="{{ localtime(lesson.starts_at, '%Y-%m-%dT%H:%M') }}">{{ localtime(lesson.starts_at, '%H:%M') }}<small>{{ lesson.duration_minutes }} мин</small></time>
+      <div class="dashboard-copy"><a class="dashboard-primary-link" href="/admin/students/{{ lesson.student_id }}">{{ lesson.student.display_name }}</a><span>{% if lesson.state == 'cancelled' %}Отменено{% elif item.outcome and item.outcome != 'unknown' %}{{ item.outcome_label }}{% elif item.finished %}Результат не отмечен{% else %}Запланировано{% endif %}{% if lesson.note %} · {{ lesson.note }}{% endif %}</span></div>
+      <div class="dashboard-actions">{% if item.is_next %}<span class="chip current">Ближайшее</span>{% endif %}<a class="quiet-link" href="/admin/lessons?day={{ item.local_day }}">Открыть занятие</a><a class="quiet-link" href="/admin/lessons/{{ lesson.id }}/attendance">{{ 'Открыть результат' if item.outcome and item.outcome != 'unknown' else 'Отметить посещаемость' }}</a><a class="quiet-link" href="/admin/students/{{ lesson.student_id }}">Карточка ученика</a>{% if lesson.meeting_url and lesson.state == 'scheduled' %}<a class="quiet-link" href="{{ lesson.meeting_url }}" target="_blank" rel="noopener noreferrer">Войти в урок ↗</a>{% endif %}</div>
+    </li>{% endfor %}</ol>{% else %}{{ empty_state('На сегодня занятий нет', '', '/admin/lessons/new', 'Создать занятие') }}{% endif %}
+  </section>
+
+  <section class="dashboard-section dashboard-review-section" aria-labelledby="homework-review-title">
+    <div class="section-head"><div><h2 id="homework-review-title">Домашние работы</h2></div><div class="dashboard-actions"><span class="chip pending">{{ review_count }}</span><a class="quiet-link" href="/admin/assignments?status=pending">Все работы</a></div></div>
+    {% if to_review %}<ul class="dashboard-review-list">{% for target in to_review %}<li class="panel dashboard-review-row"><img class="student-avatar" src="/static/student-avatar-default.png" alt="" width="42" height="42"><div class="dashboard-copy"><a class="dashboard-primary-link" href="/admin/reviews?target={{ target.id }}">{{ target.student.display_name }}</a><span>{{ target.assignment.title }} · {{ status_labels['pending'] }}</span></div>{{ action_link('/admin/reviews?target=' ~ target.id, 'Открыть проверку') }}</li>{% endfor %}</ul>{% if review_count > to_review|length %}<a class="quiet-link dashboard-more" href="/admin/reviews">Открыть очередь · {{ review_count }}</a>{% endif %}{% else %}{{ empty_state('Работ на проверке нет') }}{% endif %}
+  </section>
+
+  <section class="dashboard-section dashboard-next-grid" aria-label="Результаты и посещаемость">
+    <article class="panel dashboard-card">
+      <div class="section-head"><div><h2><a href="/admin/analytics/actions/attendance?period=month">Занятия без результата</a></h2></div><span class="chip pending">{{ missing_attendance_count }}</span></div>
+      {% if missing_attendance %}<ul class="dashboard-list">{% for lesson, student_name in missing_attendance %}<li class="dashboard-row"><div class="dashboard-copy"><a class="dashboard-primary-link" href="/admin/lessons/{{ lesson.id }}/attendance">{{ student_name }}</a><span>{{ localtime(lesson.starts_at) }} · итог не отмечен</span></div><a class="quiet-link" href="/admin/lessons/{{ lesson.id }}/attendance">Отметить</a></li>{% endfor %}</ul>{% else %}{{ empty_state('Все результаты отмечены') }}{% endif %}
+    </article>
+    <article class="panel dashboard-card">
+      <div class="section-head"><div><h2><a href="/admin/analytics/actions/absences?period=month">Повторные неявки</a></h2><p class="muted">Два и более отмеченных пропуска · последние 90 дней</p></div><span class="chip">{{ repeated_absence_count }}</span></div>
+      {% if repeated_absences %}<ul class="dashboard-list">{% for rows in repeated_absences %}<li class="dashboard-row"><div class="dashboard-copy"><strong>{{ rows[0][1] }} · {{ rows|length }}</strong><span>{% for lesson, student_name in rows %}<a class="quiet-link" href="/admin/lessons/{{ lesson.id }}/attendance">{{ localtime(lesson.starts_at, '%d.%m') }}</a>{% if not loop.last %}, {% endif %}{% endfor %}</span></div></li>{% endfor %}</ul>{% else %}{{ empty_state('Повторных неявок нет') }}{% endif %}
+    </article>
+  </section>
+
+  <section class="dashboard-section dashboard-next-grid" aria-label="Дальше">
+    <article class="panel dashboard-card">
+      <div class="section-head"><div><h2>Следующее занятие</h2></div></div>
+      {% if next_lesson %}<div class="next-lesson"><time datetime="{{ localtime(next_lesson.starts_at, '%Y-%m-%dT%H:%M') }}">{{ localtime(next_lesson.starts_at, '%d.%m · %H:%M') }}</time><strong>{{ next_lesson.student.display_name }}</strong><span>{{ next_lesson.duration_minutes }} минут</span></div><div class="dashboard-actions"><a class="quiet-link" href="/admin/lessons?day={{ localtime(next_lesson.starts_at, '%Y-%m-%d') }}">Открыть занятие</a><a class="quiet-link" href="/admin/students/{{ next_lesson.student_id }}">Карточка ученика</a>{% if next_lesson.meeting_url %}<a class="quiet-link" href="{{ next_lesson.meeting_url }}" target="_blank" rel="noopener noreferrer">Войти в урок ↗</a>{% endif %}</div>{% else %}{{ empty_state('Будущих занятий нет', '', '/admin/lessons/new', 'Создать занятие') }}{% endif %}
+    </article>
+    <article class="panel dashboard-card">
+      <div class="section-head"><div><h2>Ближайшие сроки</h2></div></div>
+      {% if deadlines %}<ul class="dashboard-list">{% for target in deadlines %}<li class="dashboard-row"><div class="dashboard-copy"><a class="dashboard-primary-link" href="/admin/assignments/{{ target.assignment_id }}">{{ target.assignment.title }}</a><span>{{ target.student.display_name }} · {{ localtime(target.assignment.due_at) }}</span></div>{{ action_link('/admin/assignments/' ~ target.assignment_id, 'Открыть') }}</li>{% endfor %}</ul>{% else %}{{ empty_state('Ближайших сроков нет') }}{% endif %}
+    </article>
+  </section>
+
+</div>
+{% endblock %}

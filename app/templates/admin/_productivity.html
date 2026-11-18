@@ -1,0 +1,18 @@
+<div class="productivity-bar" aria-label="Инструменты преподавателя">
+  <button class="btn secondary productivity-open" type="button" data-palette-open aria-haspopup="dialog" aria-controls="productivity-dialog" aria-label="Поиск и команды" title="Поиск и команды (Ctrl+K)"><svg class="utility-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg></button>
+  <a class="btn secondary productivity-notifications" href="/admin/productivity/notifications" aria-label="Уведомления" title="Уведомления"><svg class="utility-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 17h14l-2-3V9a5 5 0 0 0-10 0v5zM10 20h4"/></svg></a>
+</div>
+<dialog id="productivity-dialog" class="productivity-dialog" aria-labelledby="productivity-title">
+  <div class="productivity-dialog-head"><h2 id="productivity-title">Поиск и команды</h2><button type="button" class="btn secondary" data-palette-close aria-label="Закрыть">Закрыть</button></div>
+  <label class="visually-hidden" for="productivity-query">Поиск по ученикам, заданиям, тестам и темам</label>
+  <input id="productivity-query" type="search" autocomplete="off" placeholder="Ученик, задание, тест или тема…" aria-controls="productivity-results" aria-describedby="productivity-help">
+  <p id="productivity-help" class="muted">Перемещение: ↑ ↓ · открыть: Enter · закрыть: Esc</p>
+  <div id="productivity-results" class="productivity-results" role="listbox" aria-label="Результаты поиска"></div>
+  <div class="productivity-commands" aria-label="Быстрые действия">
+    <button type="button" data-command="/admin/lessons/new">Создать занятие</button>
+    <button type="button" data-command="/admin/assignments/new">Создать домашнее задание</button>
+    <button type="button" data-command="/admin/reviews">Проверка работ</button>
+    <button type="button" data-command="/admin/analytics">Аналитика</button>
+    <button type="button" data-next-lesson>Ближайшее занятие</button>
+  </div>
+</dialog>

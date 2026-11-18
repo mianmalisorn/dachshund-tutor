@@ -1,0 +1,7 @@
+{% extends 'base.html' %}
+{% block title %}Мои занятия{% endblock %}
+{% block content %}
+<header class="page-head"><div><h1>Мои занятия</h1></div></header>
+{% include 'student/_video_invite.html' %}
+<section class="panel" aria-label="Занятия по расписанию"><h2>Занятия по расписанию</h2>{% if lessons %}<div class="item-list">{% for lesson in lessons %}<div class="item-row spacious"><span class="item-icon">▦</span><span class="item-text"><strong>{{ localtime(lesson.starts_at) }} · {{ lesson.duration_minutes }} минут</strong><small>{{ lesson.note or 'Английский язык' }}</small></span>{% if lesson.meeting_url %}<a class="btn secondary small" href="{{ lesson.meeting_url }}" rel="noopener noreferrer" target="_blank">Перейти к уроку ↗</a>{% endif %}</div>{% endfor %}</div>{% else %}<p class="empty">Пока занятий в расписании нет.</p>{% endif %}</section>
+{% endblock %}

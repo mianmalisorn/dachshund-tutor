@@ -1,0 +1,12 @@
+{% extends 'base.html' %}{% block title %}Личное напоминание{% endblock %}{% block content %}
+<h1>{{ 'Изменить' if row else 'Новое' }} личное напоминание</h1><p><a href="/personal">← Личные напоминания</a></p>
+{% if form_error %}<div class="alert" role="alert">{{ form_error }}</div>{% endif %}
+<form method="post" class="panel stack personal-panel" action="{{ '/personal/' ~ row.id ~ '/edit' if row else '/personal/new' }}">
+<input type="hidden" name="csrf" value="{{csrf}}"><input type="hidden" name="creation_key" value="{{values.get('creation_key','')}}"><input type="hidden" name="version" value="{{values.get('version','')}}">
+{% if not row %}<label>Получатель<select name="recipient_id" required><option value="">Выберите получателя</option>{% for u in recipients %}<option value="{{u.id}}" {% if values.get('recipient_id')|string==u.id|string %}selected{% endif %}>{{u.display_name}}</option>{% endfor %}</select></label>{% if not recipients %}<p>Нет подключённых получателей, разрешивших Вам личные напоминания. Получателю нужно подтвердить /start и выбрать Вас в настройках согласия.</p>{% endif %}{% endif %}
+<div class="form-actions" aria-label="Короткие шаблоны"><button class="btn secondary" type="button" data-reminder-preset="Вы ничего не забыли?">Вы ничего не забыли?</button><button class="btn secondary" type="button" data-reminder-preset="Напоминание: ">Напоминание…</button></div>
+<label>Сообщение<textarea name="body" rows="5" maxlength="1000" required>{{values.get('body','')}}</textarea></label>
+<label>Местная дата и время<input type="datetime-local" name="due_at" required value="{{values.get('due_at','')}}"></label>
+<label>Часовой пояс IANA<input name="timezone_name" maxlength="60" required value="{{values.get('timezone_name','')}}" placeholder="Europe/Moscow"></label>
+<p>До 1000 символов. Не более пяти новых напоминаний получателю за сутки UTC; интервал — не менее 15 минут. Отправка разрешается отдельно при настройке бота.</p>
+<button class="btn secondary" type="submit">Поставить в очередь</button></form>{% endblock %}

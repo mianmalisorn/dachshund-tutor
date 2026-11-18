@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block title %}Новое задание{% endblock %}
+{% block content %}
+{% set draft = draft|default({}) %}
+{% if form_error %}<div class="alert error" role="alert">{{ form_error }} Текст и выбор учеников сохранены. Файлы нужно выбрать повторно.</div>{% endif %}
+<header class="page-head"><div><span class="eyebrow">НОВАЯ РАБОТА</span><h1>Создать задание</h1><p class="muted">Выберите учеников, установите срок и приложите материалы.</p></div><a href="/admin/assignments" class="btn secondary">← К заданиям</a></header>
+<form action="/admin/assignments" method="post" enctype="multipart/form-data" class="panel stack form-wide" data-draft="homework" data-draft-key="new-assignment"><input type="hidden" name="csrf" value="{{ csrf }}">
+<input type="hidden" name="creation_key" value="{{ creation_key }}">
+<label>Название задания<input type="text" name="title" value="{{ draft.get('title','') }}" required maxlength="180" placeholder="Present Perfect — упражнения"></label>
+<label>Описание<textarea name="description" rows="5" maxlength="10000" placeholder="Что нужно сделать, на что обратить внимание, какие страницы…">{{ draft.get('description','') }}</textarea></label>
+<div class="field-grid"><label>Сдать до (по времени кабинета)<input type="datetime-local" name="due_at" value="{{ draft.get('due_at','') }}" required></label><label>Папка заданий<select name="folder_id"><option value="">Без папки</option>{% for folder in folders %}<option value="{{ folder.id }}" {% if folder.id|string==draft.get('folder_id') %}selected{% endif %}>{{ folder.name }}</option>{% endfor %}</select></label></div>
+<fieldset class="student-select" data-recipient-picker><legend>Кому назначить *</legend>
+<div class="recipient-tools" hidden><label>Поиск учеников<input type="search" placeholder="Найти ученика…" data-recipient-search autocomplete="off"></label><output data-recipient-count aria-live="polite">Выбрано: 0</output></div>
+<div class="recipient-selected" data-recipient-selected aria-label="Выбранные ученики" hidden></div>
+<p class="muted" data-recipient-empty role="status" hidden>Ученики не найдены</p>
+<div class="check-grid recipient-list">{% for student in students %}<label class="check-tile"><input type="checkbox" name="student_ids" value="{{ student.id }}" {% if student.id|string in draft.get('student_ids',[]) %}checked{% endif %}> {{ student.display_name }}</label>{% else %}<p class="muted">Сначала создайте аккаунты учеников.</p>{% endfor %}</div></fieldset>
+<label>Файлы для задания (необязательно)<input type="file" name="files" multiple accept="{{ upload_accept }}"><small>До {{ request.app.state.settings.max_files_per_upload }} файлов, каждый до {{ request.app.state.settings.max_file_mb }} МБ. Сайт не проверяет содержимое на вирусы.</small></label>
+<div class="form-actions"><button class="btn primary" type="submit">Создать и назначить →</button><a class="btn secondary" href="/admin/assignments">Отмена</a></div>
+</form>
+{% endblock %}

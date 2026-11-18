@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block title %}Уведомления{% endblock %}
+{% block content %}
+<header class="page-head"><div><p class="eyebrow">Рабочее пространство</p><h1>Уведомления</h1><p>События и задачи из текущих очередей. История ограничена 100 записями.</p></div></header>
+<section class="panel notification-group"><h2>Текущие задачи</h2>
+{% for item in notifications if item.kind=='task' %}<article class="notification-row {% if not item.read %}unread{% endif %}"><div><a href="{{ item.url }}" data-notification-key="{{ item.key }}">{{ item.title }}</a><p>{{ item.detail }}{% if item.at %} · {{ item.at[:16]|replace('T',' ') }} UTC{% endif %}</p></div><span>{{ 'Прочитано' if item.read else 'Не прочитано' }}</span></article>{% else %}<p class="empty">Сейчас нет задач, ожидающих завершения.</p>{% endfor %}
+</section>
+<section class="panel notification-group top-gap"><h2>События</h2>
+{% for item in notifications if item.kind=='event' %}<article class="notification-row {% if not item.read %}unread{% endif %}"><div><a href="{{ item.url }}" data-notification-key="{{ item.key }}">{{ item.title }}</a><p>{{ item.detail }}{% if item.at %} · {{ item.at[:16]|replace('T',' ') }} UTC{% endif %}</p></div><span>{{ 'Прочитано' if item.read else 'Не прочитано' }}</span></article>{% else %}<p class="empty">Новых событий нет.</p>{% endfor %}
+</section>
+<form hidden id="notification-csrf"><input name="csrf" value="{{ csrf }}"></form>
+{% endblock %}

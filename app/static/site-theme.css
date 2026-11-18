@@ -1,0 +1,110 @@
+/* Reference dashboard. Shared rules are deliberately limited to admin navigation. */
+@media (max-width:800px) {
+  .tutor-theme.student-mode .nav { flex-wrap:wrap; overflow-x:visible; }
+  .tutor-theme.student-mode .nav-link { flex:1 1 145px; justify-content:center; white-space:normal; text-align:center; }
+  .tutor-theme.student-mode .nav-account { flex:1 1 145px; min-width:0; }
+  .tutor-theme.student-mode .nav-account .nav-link { width:100%; }
+}
+.tutor-theme .sidebar {width:226px;padding:34px 18px 22px;background:linear-gradient(160deg,#D8CFBC08,transparent 45%),#11120Df2;border-right:1px solid #D8CFBC12;box-shadow:12px 0 60px #11120D33}
+.tutor-theme .brand {padding:0 14px;margin-bottom:58px;font-size:25px;font-weight:650;letter-spacing:-1px}
+.tutor-theme .brand small {font-size:10px;letter-spacing:.04em;color:#CBBEAD}
+.tutor-theme .nav {gap:9px}
+.tutor-theme .nav-link {display:flex;align-items:center;gap:13px;min-height:47px;font-size:13px;color:#D8CFBC;padding:12px 15px;border-radius:12px}
+.tutor-theme .nav-icon {width:18px;height:18px;flex:none;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.tutor-theme .nav-link.active {background:linear-gradient(110deg,#4F75687a,#35534A33);border:1px solid #98BCAE40;color:#FFFBF4;box-shadow:inset 0 1px #DAF1DE16,0 6px 22px #051F2044}
+.tutor-theme .nav-link.active::after {content:'';width:5px;height:5px;border-radius:50%;background:#98BCAE;box-shadow:0 0 10px #98BCAE;flex:none;margin-left:auto}
+.tutor-theme .nav-link:hover {background-color:#D8CFBC0c;color:#FFFBF4}
+.tutor-theme .sidebar-bottom {gap:6px;border-top:1px solid #D8CFBC15;padding-top:17px}
+.tutor-theme .profile {border:0;padding:10px 6px;gap:10px}
+.tutor-theme .avatar {background:linear-gradient(145deg,#D8CFBC,#98BCAE);color:#11120D;font-size:14px;border:3px solid #D8CFBC15}
+.tutor-theme .profile-name {font-size:12px;font-weight:500}
+.tutor-theme .ghost-logout {font-size:12px;color:#CBBEAD;padding-left:54px}
+/* Approved variant 2 surfaces shared by public, student, sender and admin screens.
+   Private copy/assets remain in server-authorized templates only. */
+body.tutor-theme {background:radial-gradient(ellipse at 76% 6%,#D8CFBC19,transparent 44%),radial-gradient(ellipse at 40% 62%,#4F75683d,transparent 52%),radial-gradient(ellipse at 90% 95%,#35534A42,transparent 48%),#11120D;color:#FFFBF4}
+.tutor-theme .sidebar {background:linear-gradient(110deg,#D8CFBC0e,#98BCAE04 60%,#11120D44),#11120Dcf;box-shadow:inset -1px 0 #FFFBF414,12px 0 32px #11120D55;backdrop-filter:blur(24px)}
+.tutor-theme .panel,.tutor-theme .task-card,.tutor-theme .login-form {background:radial-gradient(ellipse at 10% 0,#FFFBF40b,transparent 70%),linear-gradient(130deg,#D8CFBC15,#98BCAE05 65%),#11120D80;border:1px solid #D8CFBC14;border-radius:18px;box-shadow:inset 0 1px #FFFBF429,inset 1px 0 #FFFBF40a,0 14px 28px -12px #11120Daa;backdrop-filter:blur(24px) saturate(110%)}
+.tutor-theme:not(.dashboard-mode) .main-content {padding:28px 32px 18px}
+.tutor-theme:not(.dashboard-mode) h1 {font-size:clamp(1.8rem,3vw,2.6rem);font-weight:550;letter-spacing:-.04em}
+.tutor-theme:not(.dashboard-mode) h2 {font-size:1.12rem;font-weight:550}
+.tutor-theme .btn.primary {background:linear-gradient(145deg,#E6D8C9,#98BCAE);color:#11120D;border-color:#D8CFBC77;box-shadow:inset 0 1px #FFFBF480,0 6px 24px #11120D55,0 0 24px #98BCAE16}
+.tutor-theme .btn.secondary {background:linear-gradient(140deg,#D8CFBC13,#98BCAE05),#11120D66;border-color:#D8CFBC29;color:#D8CFBC;box-shadow:inset 0 1px #FFFBF412,0 4px 10px #11120D33}
+.tutor-theme .btn:hover {filter:brightness(1.08)}
+.tutor-theme :focus-visible {outline:3px solid var(--focus-ring);outline-offset:3px}
+.tutor-theme input:not([type=checkbox]):not([type=hidden]),.tutor-theme select,.tutor-theme textarea {background:#11120D99!important;border:1px solid #D8CFBC35!important;color:#FFFBF4!important;box-shadow:inset 0 2px 7px #11120D44}
+.tutor-theme option {background:#202820;color:#FFFBF4}
+.tutor-theme input:focus,.tutor-theme select:focus,.tutor-theme textarea:focus {border-color:#98BCAE!important;box-shadow:0 0 0 3px #98BCAE25!important}
+.tutor-theme .check-tile,.tutor-theme .file-link,.tutor-theme .filter-pill {background:linear-gradient(125deg,#D8CFBC0c,#98BCAE03),#11120D55;border-color:#D8CFBC25}
+.tutor-theme .filter-pill.selected {background:#98BCAE;color:#11120D}
+.tutor-theme .muted,.tutor-theme .meta,.tutor-theme .item-text small,.tutor-theme .task-bottom {color:#CBBEAD}
+.tutor-theme .chip {background:#98BCAE0d;color:#D8CFBC;border:1px solid #98BCAE30;border-radius:7px}
+.tutor-theme .chip.overdue {border-style:dashed}
+.tutor-theme .item-row,.tutor-theme .assignment-row,.tutor-theme td {border-color:#D8CFBC18}
+.tutor-theme th {background:#D8CFBC08;color:#D8CFBC}
+.tutor-theme tbody tr:hover {background:#D8CFBC05}
+.tutor-theme .review-note {background:#98BCAE0a;border-color:#98BCAE55}
+.tutor-theme .empty {background:#D8CFBC03;border-color:#D8CFBC25;color:#CBBEAD}
+.tutor-theme .student-memory {max-width:1120px}
+.tutor-theme .memory-actions {gap:12px;align-items:center;margin-block:16px}
+.tutor-theme .memory-actions>a:not(.btn) {font-size:.87rem;text-underline-offset:4px;color:#98BCAE}
+.tutor-theme .personal-panel {max-width:1000px}
+.tutor-theme .alert {background:#D8CFBC0d;border-color:#D8CFBC40;color:#FFFBF4}
+.tutor-theme .alert.error {border-left:3px solid #D8CFBC}
+.tutor-theme .login-intro h1 {font-size:clamp(2.4rem,5vw,4.5rem)}
+/* Calendar references: isolated luminous edge and a clean vertical agenda. */
+.tutor-theme .schedule-page>h1 {margin-bottom:12px}
+.tutor-theme .schedule-filter {display:grid;grid-template-columns:minmax(160px,1fr) minmax(140px,1fr) auto;align-items:end;gap:16px;position:relative;overflow:hidden}
+.tutor-theme .schedule-filter::before {content:'';position:absolute;top:0;left:35%;width:30%;height:2px;border-radius:0 0 5px 5px;background:#98BCAE;box-shadow:0 0 16px #98BCAE77}
+.tutor-theme .schedule-entry {position:relative;border-left-color:#98BCAE55;background:linear-gradient(120deg,#98BCAE10,transparent 55%),#11120D88}
+.tutor-theme .schedule-entry h2 {font-variant-numeric:tabular-nums}
+.tutor-theme .schedule-entry .memory-actions {margin-bottom:0}
+/* Breathing reference: quiet glass controls and concentric relief, no sound. */
+.tutor-theme .breathing-panel {width:min(380px,calc(100vw - 32px));padding:26px;border-radius:25px;border:1px solid #D8CFBC25;background:radial-gradient(ellipse at 50% 40%,#4F75683d,transparent 60%),#11120Dee;box-shadow:inset 0 1px #FFFBF433,0 24px 70px #11120Dcc;backdrop-filter:blur(24px);color:#FFFBF4}
+.tutor-theme .breathing-panel::backdrop {background:#11120D99;backdrop-filter:blur(4px)}
+.tutor-theme .breathing-panel .muted {font-size:.85rem}
+.tutor-theme .breathing-orb {width:112px;height:112px;margin:30px auto;border-color:#98BCAE50;background:radial-gradient(circle at 30% 25%,#D8CFBC55,#4F756833 45%,#11120D99);box-shadow:inset 0 1px #FFFBF477,inset 0 -8px 20px #11120D55,0 0 0 8px #D8CFBC03,0 0 0 9px #D8CFBC0a,0 12px 28px #11120D99}
+.tutor-theme .breathing-timer {font-size:2rem;font-weight:400;margin:8px 0 20px}
+.tutor-theme .breathing-panel .btn {border-radius:30px}
+@supports not (backdrop-filter:blur(1px)){.tutor-theme .panel,.tutor-theme .task-card,.tutor-theme .login-form {background:#202820}.tutor-theme .sidebar{background:#191d17}}
+@media(max-width:800px){.tutor-theme .sidebar{width:100%;padding:12px 16px;height:auto;min-height:0}.tutor-theme .brand{margin-bottom:8px;font-size:21px}.tutor-theme .nav{gap:6px}.tutor-theme .nav-link{min-height:42px;padding:9px 12px;font-size:12px}.tutor-theme .sidebar-bottom{border:0;padding-top:4px}.tutor-theme .profile{padding:0}.tutor-theme .ghost-logout{padding:8px}.tutor-theme:not(.dashboard-mode) .main-content{padding:18px 14px 10px}.tutor-theme .schedule-filter{grid-template-columns:1fr}.tutor-theme .breathing-panel{bottom:16px;right:16px}.tutor-theme .memory-actions{gap:12px}}
+@media(prefers-reduced-motion:reduce){.tutor-theme *{transition:none!important;animation:none!important}.tutor-theme .breathing-orb{transform:none!important}}
+.tutor-theme:not(.dashboard-mode) .admin-utilities {margin-top:14px;padding:12px 16px;min-height:88px;border:1px solid #D8CFBC18;border-radius:16px;background:linear-gradient(105deg,#D8CFBC07,#11120D88);box-shadow:inset 0 1px #FFFBF405;gap:20px}
+.tutor-theme:not(.dashboard-mode) .breathing-trigger {max-width:none;min-width:138px;font-size:11px;background:#D8CFBC07;border-color:#D8CFBC25;border-radius:30px}
+.tutor-theme:not(.dashboard-mode) .admin-utilities .cat-widget {max-width:470px;font-size:11px;background:linear-gradient(120deg,#D8CFBC08,transparent),#210B0F70}
+@media(max-width:800px){.tutor-theme:not(.dashboard-mode) .admin-utilities{padding:8px;gap:10px}.tutor-theme:not(.dashboard-mode) .breathing-trigger{min-width:92px;max-width:92px}.tutor-theme:not(.dashboard-mode) .admin-utilities .cat-widget{font-size:10px;padding:4px 8px;gap:6px}}
+
+/* Attendance reuses the approved glass panels; no separate theme. */
+.attendance-page .attendance-filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:end}
+.attendance-page .attendance-filters label,.attendance-page select{min-width:0;max-width:100%}
+.attendance-page .attendance-counts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:20px 0}
+.attendance-page .attendance-counts .panel{padding:16px;min-width:0}
+.attendance-page dt{font-size:.85rem;overflow-wrap:anywhere;color:#D8CFBC}
+.attendance-page dd{font-size:1.7rem;margin:8px 0 0;color:#FFFBF4;font-variant-numeric:tabular-nums}
+.attendance-page .attendance-confirm{display:flex;align-items:flex-start;gap:10px}
+.attendance-page .attendance-confirm input{width:auto;flex:none;margin-top:4px}
+.attendance-page .memory-text,.attendance-page h1{overflow-wrap:anywhere}
+@media(max-width:600px){.attendance-page .attendance-filters{grid-template-columns:1fr}.attendance-page .attendance-counts{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* Finance extends the existing glass cards, without exposing private content to students. */
+.finance-page { overflow-wrap:anywhere; }
+.finance-filters { display:flex; flex-wrap:wrap; gap:1rem; align-items:end; }
+.finance-filters label { flex:1 1 160px; min-width:0; }
+.finance-metrics { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr)); gap:16px; }
+.finance-metrics strong { display:block; font-size:1.45rem; margin-top:10px; font-variant-numeric:tabular-nums; }
+.finance-row { display:flex; flex-wrap:wrap; gap:12px 20px; align-items:center; }
+.finance-row > * { min-width:0; overflow-wrap:anywhere; }
+.finance-lines { white-space:pre-wrap; overflow-wrap:anywhere; }
+.finance-page select { max-width:100%; text-overflow:ellipsis; }
+.finance-page details summary { cursor:pointer; }
+@media(max-width:600px) { .finance-filters { display:grid; grid-template-columns:minmax(0,1fr); } .finance-row { align-items:flex-start; flex-direction:column; } }
+
+.quiz-page { overflow-wrap:anywhere; }
+.quiz-page textarea,.quiz-page select { max-width:100%; }
+.quiz-page fieldset { min-width:0; border:1px solid var(--border, #565449); border-radius:16px; padding:16px; }
+.quiz-choice { display:flex; gap:12px; align-items:flex-start; padding:14px 8px; }
+.quiz-choice input { flex:0 0 auto; width:20px; height:20px; margin-top:3px; }
+.quiz-choice span { min-width:0; white-space:pre-wrap; }
+.quiz-option-editor { padding-block:12px; border-bottom:1px solid #565449; }
+.quiz-page h2 { white-space:pre-wrap; }
+.quiz-page [aria-current=page] { background:#35534A; border-radius:10px; padding:4px 10px; }
+@media(max-width:600px) { .quiz-page .panel { padding:18px; } .quiz-page .btn { white-space:normal; } }

@@ -1,0 +1,8 @@
+{% if video_meeting %}
+<section class="panel video-invite" data-video-invite aria-label="Активное видеозанятие Tutor">
+  <span class="eyebrow">СЕЙЧАС · ВИДЕОЗАНЯТИЕ TUTOR</span>
+  <h2>Видеозанятие началось</h2>
+  <p>Преподаватель ждёт вас в звонке.</p>
+  <a class="btn primary" href="/video/meetings/{{ video_meeting.id }}">Присоединиться к звонку</a>
+</section>
+{% endif %}

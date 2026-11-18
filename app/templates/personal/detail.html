@@ -1,0 +1,8 @@
+{% extends 'base.html' %}{% block title %}Личное напоминание{% endblock %}{% block content %}
+<h1>Личное напоминание</h1><a href="/personal">← Список</a>
+<section class="panel stack personal-panel"><p class="personal-text">{{row.body}}</p><p>{{personal_time(row)}} · исходный пояс: {{row.timezone_name}}</p><p>{{labels.get(row.state,row.state)}}</p>
+{% if row.state=='pending' %}{% if row.sender_id==user.id %}<a href="/personal/{{row.id}}/edit">Изменить текст или время</a>{% endif %}<form method="post" action="/personal/{{row.id}}/cancel"><input type="hidden" name="csrf" value="{{csrf}}"><input type="hidden" name="version" value="{{row.version}}"><button class="btn secondary" type="submit">Отменить отправку</button></form>{% endif %}</section>
+<h2>Доставка</h2><p>Принятие Telegram API не подтверждает прочтение. Неизвестный результат не повторяется автоматически.</p>
+{% for d in deliveries %}<p>Версия {{d.reminder_version}}: {{labels.get(d.state,d.state)}} · попыток {{d.attempts}}{% if d.sent_at %} · {{localtime(d.sent_at)}}{% endif %}</p>{% else %}<p>Записей доставки нет.</p>{% endfor %}
+<details><summary>История изменений (последние 50)</summary>{% for e in events %}<article><p>{{localtime(e.created_at)}} · {{e.kind}}</p><pre class="personal-text">{{e.snapshot_json}}</pre></article>{% endfor %}</details>
+{% endblock %}

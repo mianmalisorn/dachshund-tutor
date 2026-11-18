@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block title %}Кошка и оформление{% endblock %}
+{% block content %}
+<header class="page-head"><div><span class="eyebrow">ЛИЧНОЕ ПРОСТРАНСТВО</span><h1>Кошка и оформление</h1><p class="muted">Только для Вас. Настройки не влияют на задания и рабочие уведомления.</p></div></header>
+<section class="panel form-narrow"><form method="post" class="stack" action="/admin/cat/settings">
+<input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="version" value="{{ prefs.version }}">
+<label class="check-tile"><input type="checkbox" name="enabled" value="yes" {% if prefs.enabled %}checked{% endif %}>Показывать кошку и личные реплики</label>
+<label>Частота<select name="frequency">{% for key,label in [('rare','Редко — не чаще раза в 30 минут'),('normal','Обычно — не чаще раза в 10 минут'),('frequent','Чаще — не чаще раза в 2 минуты')] %}<option value="{{ key }}" {% if prefs.frequency==key %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
+<label>Тон<select name="tone">{% for key,label in [('soft','Мягко'),('medium','Стандарт'),('spicy','С дерзкими репликами')] %}<option value="{{ key }}" {% if prefs.tone==key %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
+<label class="check-tile"><input type="checkbox" name="rare_care" value="yes" {% if prefs.rare_care %}checked{% endif %}>Редкая забота</label>
+<small class="muted">Не чаще раза в 24 часа. Ночная реплика — не более одной за ночь. Особый комплимент — не чаще раза за 7 календарных дней и после 10 показов.</small>
+<label class="check-tile"><input type="checkbox" name="easter_eggs" value="yes" {% if prefs.easter_eggs %}checked{% endif %}>Персональные пасхалки</label>
+<small class="muted">Только с дерзким тоном, после 20 показов, не чаще раза в 7 суток.</small>
+<label class="check-tile"><input type="checkbox" name="animations" value="yes" {% if prefs.animations %}checked{% endif %}>Мягкое появление компонента</label>
+<p class="muted">Ограничения сохраняются после входа и между вкладками. Последние восемь реплик не повторяются. Системная настройка уменьшения движения имеет приоритет.</p>
+<button class="btn primary" type="submit">Сохранить настройки</button>
+</form></section>
+<p><a class="text-link" href="/admin/cat/gallery">Посмотреть рабочие эскизы кошки →</a></p>
+{% endblock %}

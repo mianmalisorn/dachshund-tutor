@@ -1,0 +1,8 @@
+{% extends 'base.html' %}
+{% block title %}История изменений{% endblock %}
+{% block content %}
+<header class="page-head"><div><p class="eyebrow">Существующие журналы</p><h1>История изменений</h1><p>События собраны из журналов расписания, посещаемости, домашних заданий, статусов учеников, тем, проверок тестов и педагогических записей. Для финансовых операций открыт исходный журнал, без копирования бухгалтерских записей.</p><nav class="memory-actions" aria-label="Другие журналы"><a href="/admin/finance">Финансовый журнал</a><a href="/admin/students">Педагогические записи учеников</a></nav></div></header>
+<section class="panel history-list" aria-label="Последние изменения">
+{% for event in events %}<article class="history-row"><div class="history-meta"><time datetime="{{ event.at }}">{{ event.at[:16]|replace('T',' ') }} UTC</time><span>{{ event.actor }}</span></div><div><strong>{{ event.what }}</strong><p>{{ event.student }}</p>{% if event.before %}<dl class="history-diff"><div><dt>Было</dt><dd>{% for key,value in event.before.items() %}{{ key }}: {{ value }}{% if not loop.last %} · {% endif %}{% endfor %}</dd></div>{% endif %}{% if event.after %}<div><dt>Стало</dt><dd>{% for key,value in event.after.items() %}{{ key }}: {{ value }}{% if not loop.last %} · {% endif %}{% endfor %}</dd></div>{% endif %}</dl></div><a href="{{ event.url }}">Открыть источник</a></article>{% else %}<p class="empty">В существующих журналах пока нет изменений.</p>{% endfor %}
+</section>
+{% endblock %}

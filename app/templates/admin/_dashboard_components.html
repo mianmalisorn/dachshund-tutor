@@ -1,0 +1,3 @@
+{% macro status(label, kind='neutral') -%}<span class="chip {{ kind }}">{{ label }}</span>{%- endmacro %}
+{% macro action_link(url, label) -%}<a class="btn small secondary dashboard-action" href="{{ url }}">{{ label }}</a>{%- endmacro %}
+{% macro empty_state(title, detail='', url='', action='') -%}<div class="dashboard-empty"><strong>{{ title }}</strong>{% if detail %}<p>{{ detail }}</p>{% endif %}{% if url and action %}<a class="quiet-link" href="{{ url }}">{{ action }} →</a>{% endif %}</div>{%- endmacro %}
